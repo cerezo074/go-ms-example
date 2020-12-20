@@ -14,9 +14,9 @@ drop_db:
 
 # Database migrations
 migration_up:
-	migrate -path db/migration -database "postgres://admin:password@localhost:5432/freefortalking?sslmode=disable" -verbose up
+	migrate -path ../db/migration -database "postgres://admin:password@localhost:5432/freefortalking?sslmode=disable" -verbose up
 
 migration_down:
-	migrate -path db/migration -database "postgres://admin:password@localhost:5432/freefortalking?sslmode=disable" -verbose down
+	migrate -path ../db/migration -database "postgres://admin:password@localhost:5432/freefortalking?sslmode=disable" -verbose down
 
 .PHONY: create_postgres drop_postgress create_db drop_db migration_up migration_down

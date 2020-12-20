@@ -25,7 +25,7 @@ func init() {
 
 func main() {
 	if store == nil {
-		log.Fatal("Can not run web server before database server")
+		log.Fatal("Can not run web server before database server is up and ready")
 		return
 	}
 

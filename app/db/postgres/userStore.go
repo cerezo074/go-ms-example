@@ -38,7 +38,7 @@ func (store *UserStore) Users() ([]entities.User, error) {
 }
 
 func (store *UserStore) CreateUser(newUser *entities.User) error {
-	if err := store.Get(newUser, "INSERT INTO users VALUES ($1, $2, $3, $4, $5, $6)",
+	if err := store.Get(newUser, "INSERT INTO users (email, nickname, password, image_url, country_code, birthday) VALUES ($1, $2, $3, $4, $5, $6)",
 		newUser.Email,
 		newUser.Nickname,
 		newUser.Password,
