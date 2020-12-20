@@ -7,6 +7,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+//BuildUserHandler factory method for creating a method handler to users
+func BuildUserHandler() MethodHandlers {
+	return userHandler{}
+}
+
 type userHandler struct {
 }
 
@@ -14,11 +19,6 @@ type userHandler struct {
 type BasicUser struct {
 	Name  string
 	Email string
-}
-
-//BuildUserHandler factory method for creating a method handler to users
-func BuildUserHandler() MethodHandlers {
-	return userHandler{}
 }
 
 func (handler userHandler) RegisterMethods(app *fiber.App) {
@@ -67,7 +67,7 @@ func (handler userHandler) newUser(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"result": fmt.Sprintf("Welcome %s!", user.Name),
+		"result": fmt.Sprintf("Welcome %s!", user.Nickname),
 	})
 }
 
