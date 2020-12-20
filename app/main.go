@@ -32,5 +32,5 @@ func main() {
 	app := fiber.New()
 	userRouter := routers.NewUserRouter()
 	userRouter.Register(app, store)
-	app.Listen(":3000")
+	log.Fatal(app.Listen(":3000"))
 }

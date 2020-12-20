@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"user/app/utils/response"
 	"user/core/entities"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,22 +30,21 @@ func (handler userHandler) RegisterMethods(app *fiber.App) {
 	app.Delete("/api/v1/users/:id", handler.deleteUser)
 }
 
-func (handler userHandler) getUsers(c *fiber.Ctx) error {
-	users := []BasicUser{
-		{Name: "Usuario 1", Email: "Email1@g.co"},
-		{Name: "Usuario 2", Email: "Email2@g.co"},
+func (handler userHandler) getUsers(context *fiber.Ctx) error {
+	users, err := handler.store.Users()
+
+	if err != nil {
+		return response.MakeJSON(response.Fail, nil, err, context)
 	}
 
-	return c.JSON(fiber.Map{
-		"result": users,
-	})
+	return response.MakeJSON(response.Success, users, nil, context)
 }
 
-func (handler userHandler) getUser(c *fiber.Ctx) error {
-	userID := c.Params("id")
+func (handler userHandler) getUser(context *fiber.Ctx) error {
+	userID := context.Params("id")
 
 	if userID == "" {
-		c.SendStatus(503)
+		context.SendStatus(503)
 		return nil
 	}
 
@@ -53,46 +53,46 @@ func (handler userHandler) getUser(c *fiber.Ctx) error {
 		Email: fmt.Sprintf("email%s@f.co", userID),
 	}
 
-	return c.JSON(fiber.Map{
+	return context.JSON(fiber.Map{
 		"result": user,
 	})
 }
 
-func (handler userHandler) newUser(c *fiber.Ctx) error {
+func (handler userHandler) newUser(context *fiber.Ctx) error {
 	user := new(entities.User)
 
-	if err := c.BodyParser(user); err != nil {
-		c.SendStatus(503)
+	if err := context.BodyParser(user); err != nil {
+		context.SendStatus(503)
 		return nil
 	}
 
-	return c.JSON(fiber.Map{
+	return context.JSON(fiber.Map{
 		"result": fmt.Sprintf("Welcome %s!", user.Nickname),
 	})
 }
 
-func (handler userHandler) updateUser(c *fiber.Ctx) error {
-	userID := c.Params("id")
+func (handler userHandler) updateUser(context *fiber.Ctx) error {
+	userID := context.Params("id")
 
 	if userID == "" {
-		c.SendStatus(503)
+		context.SendStatus(503)
 		return nil
 	}
 
-	return c.JSON(fiber.Map{
+	return context.JSON(fiber.Map{
 		"result": fmt.Sprintf("User %s updated!", userID),
 	})
 }
 
-func (handler userHandler) deleteUser(c *fiber.Ctx) error {
-	userID := c.Params("id")
+func (handler userHandler) deleteUser(context *fiber.Ctx) error {
+	userID := context.Params("id")
 
 	if userID == "" {
-		c.SendStatus(503)
+		context.SendStatus(503)
 		return nil
 	}
 
-	return c.JSON(fiber.Map{
+	return context.JSON(fiber.Map{
 		"result": fmt.Sprintf("User %s deleted!", userID),
 	})
 }

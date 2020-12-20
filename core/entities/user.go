@@ -1,6 +1,10 @@
 package entities
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type User struct {
 	ID          uuid.UUID `json:"id" form:"id" db:"id"`
@@ -10,6 +14,7 @@ type User struct {
 	ImageURL    string    `json:"image_url" form:"image_url" db:"image_url"`
 	CountryCode string    `json:"country_code" form:"country_code" db:"country_code"`
 	Birthday    string    `json:"birthday" form:"birthday" db:"birthday"`
+	CreatedAt   time.Time `db:"created_at"`
 }
 
 type UserRepository interface {
