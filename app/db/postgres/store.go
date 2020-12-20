@@ -9,7 +9,7 @@ import (
 )
 
 func NewStore(dataSourceName string) (*Store, error) {
-	db, err := sqlx.Open("postgress", dataSourceName)
+	db, err := sqlx.Open("postgres", dataSourceName)
 
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %w", err)

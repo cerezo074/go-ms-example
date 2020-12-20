@@ -7,15 +7,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-//BuildUserHandler factory method for creating a method handler to users
-func BuildUserHandler() MethodHandlers {
-	return userHandler{}
+//NewUserHandler factory method for creating a method handler to users
+func NewUserHandler(repository entities.UserRepository) MethodHandlers {
+	return userHandler{store: repository}
 }
 
 type userHandler struct {
+	store entities.UserRepository
 }
 
-//output
 type BasicUser struct {
 	Name  string
 	Email string
