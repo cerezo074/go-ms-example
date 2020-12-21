@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
 	"user/app/utils/response"
 	"user/core/entities"
 
@@ -24,7 +25,7 @@ type BasicUser struct {
 
 func (handler userHandler) RegisterMethods(app *fiber.App) {
 	app.Get("/api/v1/users", handler.getUsers)
-	app.Get("/api/v1/users/:id", handler.getUser)
+	app.Get("/api/v1/users/email", handler.getUser)
 	app.Post("/api/v1/users", handler.newUser)
 	app.Put("/api/v1/users/:id", handler.updateUser)
 	app.Delete("/api/v1/users/:id", handler.deleteUser)
@@ -34,28 +35,30 @@ func (handler userHandler) getUsers(context *fiber.Ctx) error {
 	users, err := handler.store.Users()
 
 	if err != nil {
-		return response.MakeJSON(response.Fail, nil, err, context)
+		return handler.send(nil, &response.ResponseError{StatusCode: 500, Message: err.Error()}, context)
 	}
 
-	return response.MakeJSON(response.Success, users, nil, context)
+	if len(users) == 0 {
+		return handler.send([]entities.User{}, nil, context)
+	}
+
+	return handler.send(users, nil, context)
 }
 
 func (handler userHandler) getUser(context *fiber.Ctx) error {
-	userID := context.Params("id")
+	userEmail := context.Query("address")
 
-	if userID == "" {
-		context.SendStatus(503)
-		return nil
+	if userEmail == "" {
+		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: "address is not present on url as a query param"}, context)
 	}
 
-	user := BasicUser{
-		Name:  fmt.Sprintf("Usuario %s!", userID),
-		Email: fmt.Sprintf("email%s@f.co", userID),
+	user, err := handler.store.User(userEmail)
+
+	if err != nil {
+		return handler.send(nil, &response.ResponseError{StatusCode: 404, Message: err.Error()}, context)
 	}
 
-	return context.JSON(fiber.Map{
-		"result": user,
-	})
+	return handler.send(user, nil, context)
 }
 
 func (handler userHandler) newUser(context *fiber.Ctx) error {
@@ -95,4 +98,12 @@ func (handler userHandler) deleteUser(context *fiber.Ctx) error {
 	return context.JSON(fiber.Map{
 		"result": fmt.Sprintf("User %s deleted!", userID),
 	})
+}
+
+func (handler userHandler) send(value interface{}, err *response.ResponseError, context *fiber.Ctx) error {
+	if err != nil {
+		return response.MakeJSON(response.Fail, nil, err, context)
+	}
+
+	return response.MakeJSON(response.Success, &value, nil, context)
 }

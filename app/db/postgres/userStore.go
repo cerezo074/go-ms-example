@@ -21,7 +21,7 @@ func (store *UserStore) User(email string) (entities.User, error) {
 	var user entities.User
 
 	if err := store.Get(&user, "SELECT * FROM users WHERE email = $1", email); err != nil {
-		return entities.User{}, fmt.Errorf("error retrieving one user: %w", err)
+		return entities.User{}, fmt.Errorf("fail retrieving one user, %w", err)
 	}
 
 	return user, nil
@@ -31,7 +31,7 @@ func (store *UserStore) Users() ([]entities.User, error) {
 	var users []entities.User
 
 	if err := store.Select(&users, "SELECT * FROM users"); err != nil {
-		return []entities.User{}, fmt.Errorf("error retrieving all users: %w", err)
+		return []entities.User{}, fmt.Errorf("fail retrieving all users, %w", err)
 	}
 
 	return users, nil
@@ -45,7 +45,7 @@ func (store *UserStore) CreateUser(newUser *entities.User) error {
 		newUser.ImageURL,
 		newUser.CountryCode,
 		newUser.Birthday); err != nil {
-		return fmt.Errorf("error creating a new user: %w", err)
+		return fmt.Errorf("fail creating a new user, %w", err)
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func (store *UserStore) UpdateUser(oldUser *entities.User) error {
 		oldUser.CountryCode,
 		oldUser.Birthday,
 		oldUser.Email); err != nil {
-		return fmt.Errorf("error updating a user: %w", err)
+		return fmt.Errorf("fail updating a user, %w", err)
 	}
 
 	return nil
@@ -69,7 +69,7 @@ func (store *UserStore) UpdateUser(oldUser *entities.User) error {
 
 func (store *UserStore) DeleteUser(email string) error {
 	if _, err := store.Exec("DELETE FROM users WHERE email = $1", email); err != nil {
-		return fmt.Errorf("error deleting a user: %w", err)
+		return fmt.Errorf("fail deleting a user, %w", err)
 	}
 
 	return nil
