@@ -17,6 +17,15 @@ type User struct {
 	CreatedAt   time.Time `db:"created_at"`
 }
 
+func (oldUser *User) Update(updatedUser User) {
+	oldUser.Email = updatedUser.Email
+	oldUser.Nickname = updatedUser.Nickname
+	oldUser.Password = updatedUser.Password
+	oldUser.ImageURL = updatedUser.ImageURL
+	oldUser.CountryCode = updatedUser.CountryCode
+	oldUser.Birthday = updatedUser.Birthday
+}
+
 type UserRepository interface {
 	User(email string) (User, error)
 	Users() ([]User, error)
