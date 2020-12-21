@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,12 +19,48 @@ type User struct {
 }
 
 func (oldUser *User) Update(updatedUser User) {
-	oldUser.Email = updatedUser.Email
 	oldUser.Nickname = updatedUser.Nickname
 	oldUser.Password = updatedUser.Password
 	oldUser.ImageURL = updatedUser.ImageURL
 	oldUser.CountryCode = updatedUser.CountryCode
 	oldUser.Birthday = updatedUser.Birthday
+}
+
+func (user User) IsValid() error {
+	errorMessage := ""
+	if user.ID.String() == "" {
+		errorMessage += "Invalid id, "
+	}
+
+	if user.Email == "" {
+		errorMessage += "Invalid email, "
+	}
+
+	if user.Nickname == "" {
+		errorMessage += "Invalid nickname, "
+	}
+
+	if user.Password == "" {
+		errorMessage += "Invalid password, "
+	}
+
+	if user.ImageURL == "" {
+		errorMessage += "Invalid image url, "
+	}
+
+	if user.CountryCode == "" {
+		errorMessage += "Invalid country code, "
+	}
+
+	if user.Birthday == "" {
+		errorMessage += "Invalid birthday"
+	}
+
+	if errorMessage == "" {
+		return nil
+	}
+
+	return errors.New("There are some fields invalids: " + errorMessage)
 }
 
 type UserRepository interface {

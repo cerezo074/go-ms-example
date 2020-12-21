@@ -1,6 +1,6 @@
 CREATE TABLE users (
-  id uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
-  email varchar NOT NULL,
+  id uuid DEFAULT (uuid_generate_v4()),
+  email varchar PRIMARY KEY,
   nickname varchar NOT NULL,
   password varchar NOT NULL,
   image_url varchar NOT NULL,

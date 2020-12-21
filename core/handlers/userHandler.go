@@ -61,49 +61,34 @@ func (handler userHandler) getUser(context *fiber.Ctx) error {
 }
 
 func (handler userHandler) newUser(context *fiber.Ctx) error {
-	// user := new(entities.User)
+	user := new(entities.User)
 
-	// if err := context.BodyParser(user); err != nil {
-	// 	context.SendStatus(503)
-	// 	return nil
-	// }
+	if err := context.BodyParser(user); err != nil {
+		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: err.Error()}, context)
+	}
 
-	// return context.JSON(fiber.Map{
-	// 	"result": fmt.Sprintf("Welcome %s!", user.Nickname),
-	// })
+	if err := handler.store.CreateUser(user); err != nil {
+		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusInternalServerError, Message: err.Error()}, context)
+	}
 
-	return context.SendStatus(http.StatusMethodNotAllowed)
+	return handler.send("User was created successfully", nil, context)
 }
 
 func (handler userHandler) updateUser(context *fiber.Ctx) error {
-	// //USE Multipart form data and get the url from s3
-	// userEmail := context.Query("address")
-	// if userEmail == "" {
-	// 	return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: "address is not present on url as a query param"}, context)
-	// }
+	updatedUser := new(entities.User)
+	if err := context.BodyParser(updatedUser); err != nil {
+		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: err.Error()}, context)
+	}
 
-	// updatedUser := new(entities.User)
-	// if err := context.BodyParser(updatedUser); err != nil {
-	// 	return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: err.Error()}, context)
-	// }
+	if err := updatedUser.IsValid(); err != nil {
+		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: err.Error()}, context)
+	}
 
-	// //USE Multipart form data and get the url from s3, when we get the url we set it on updatedUser
-	// oldUserValue, err := handler.store.User(userEmail)
-	// oldUser := &oldUserValue
-	// oldUser.Update(*updatedUser)
-	// invalidUser := &response.ResponseError{StatusCode: http.StatusNoContent, Message: "user doesn't exists"}
+	if err := handler.store.UpdateUser(updatedUser); err != nil {
+		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusInternalServerError, Message: err.Error()}, context)
+	}
 
-	// if err == nil {
-	// 	err = handler.store.UpdateUser(oldUser)
-	// 	if err != nil {
-	// 		return handler.send(nil, invalidUser, context)
-	// 	}
-
-	// 	return handler.send("user deleted successfully", nil, context)
-	// }
-
-	// return handler.send(nil, invalidUser, context)
-	return context.SendStatus(http.StatusMethodNotAllowed)
+	return handler.send("user updated successfully", nil, context)
 }
 
 func (handler userHandler) deleteUser(context *fiber.Ctx) error {
@@ -113,10 +98,8 @@ func (handler userHandler) deleteUser(context *fiber.Ctx) error {
 		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: "address is not present on url as a query param"}, context)
 	}
 
-	err := handler.store.DeleteUser(userEmail)
-
-	if err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusNoContent, Message: "user doesn't exists"}, context)
+	if err := handler.store.DeleteUser(userEmail); err != nil {
+		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusInternalServerError, Message: err.Error()}, context)
 	}
 
 	return handler.send("user deleted successfully", nil, context)

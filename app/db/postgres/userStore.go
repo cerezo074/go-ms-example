@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"fmt"
 	"user/core/entities"
 
@@ -21,7 +22,7 @@ func (store *UserStore) User(email string) (entities.User, error) {
 	var user entities.User
 
 	if err := store.Get(&user, "SELECT * FROM users WHERE email = $1", email); err != nil {
-		return entities.User{}, fmt.Errorf("fail retrieving one user, %w", err)
+		return entities.User{}, fmt.Errorf("fail to retrieve one user, %w", err)
 	}
 
 	return user, nil
@@ -31,46 +32,98 @@ func (store *UserStore) Users() ([]entities.User, error) {
 	var users []entities.User
 
 	if err := store.Select(&users, "SELECT * FROM users"); err != nil {
-		return []entities.User{}, fmt.Errorf("fail retrieving all users, %w", err)
+		return []entities.User{}, fmt.Errorf("fail to retrieve all users, %w", err)
 	}
 
 	return users, nil
 }
 
-func (store *UserStore) CreateUser(newUser *entities.User) error {
-	if err := store.Get(newUser, "INSERT INTO users (email, nickname, password, image_url, country_code, birthday) VALUES ($1, $2, $3, $4, $5, $6)",
+func (store *UserStore) CreateUser(newUser *entities.User) (execError error) {
+	defer func() {
+		if err := recover(); err != nil {
+			execError = store.processRecover(err)
+		}
+	}()
+
+	const query = "INSERT INTO users (email, nickname, password, image_url, country_code, birthday) VALUES ($1, $2, $3, $4, $5, $6)"
+
+	result := store.MustExec(query,
 		newUser.Email,
 		newUser.Nickname,
 		newUser.Password,
 		newUser.ImageURL,
 		newUser.CountryCode,
-		newUser.Birthday); err != nil {
-		return fmt.Errorf("fail creating a new user, %w", err)
+		newUser.Birthday)
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("Fail to create a new user, %w", err)
 	}
 
-	return nil
+	if rowsAffected == 1 {
+		return nil
+	}
+
+	return errors.New("Uknown error")
 }
 
-func (store *UserStore) UpdateUser(oldUser *entities.User) error {
+func (store *UserStore) UpdateUser(oldUser *entities.User) (execError error) {
+	defer func() {
+		if err := recover(); err != nil {
+			execError = store.processRecover(err)
+		}
+	}()
+
 	const query = "UPDATE users SET nickname = $1, password = $2, image_url = $3, country_code = $4, birthday = $5 WHERE email = $6"
 
-	if err := store.Get(oldUser, query,
+	result := store.MustExec(query,
 		oldUser.Nickname,
 		oldUser.Password,
 		oldUser.ImageURL,
 		oldUser.CountryCode,
 		oldUser.Birthday,
-		oldUser.Email); err != nil {
-		return fmt.Errorf("fail updating a user, %w", err)
+		oldUser.Email)
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("Fail to update a user, %w", err)
 	}
 
-	return nil
+	if rowsAffected == 1 {
+		return nil
+	}
+
+	return errors.New("Uknown error")
 }
 
-func (store *UserStore) DeleteUser(email string) error {
-	if _, err := store.Exec("DELETE FROM users WHERE email = $1", email); err != nil {
+func (store *UserStore) DeleteUser(email string) (execError error) {
+	defer func() {
+		if err := recover(); err != nil {
+			execError = store.processRecover(err)
+		}
+	}()
+
+	result := store.MustExec("DELETE FROM users WHERE email = $1", email)
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
 		return fmt.Errorf("fail deleting a user, %w", err)
 	}
 
-	return nil
+	if rowsAffected == 1 {
+		return nil
+	}
+
+	return errors.New("Uknown error")
+}
+
+func (store *UserStore) processRecover(value interface{}) error {
+	switch err := value.(type) {
+	case string:
+		return errors.New(err)
+	case error:
+		return err
+	default:
+		return errors.New("Unknown panic")
+	}
 }
