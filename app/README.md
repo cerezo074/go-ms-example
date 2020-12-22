@@ -23,5 +23,8 @@ Notice that we create an user with its password, they are *admin* and *password*
 Before runnig our migrations located in db/migrations folder, please check that our postgres container is up(status) and running with the following command.
 - docker ps -a
 
+7. You are done, run the app with the following command:
+- go run app/main.go
+
 Note: almost all commands are located on Makefile, so you dont need to copy them just need to check which command is that you need and run:
     - make <command>
