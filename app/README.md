@@ -18,7 +18,7 @@ Notice that we create an user with its password, they are *admin* and *password*
     - docker exec -it postgres13 createdb --username=admin --owner=admin freefortalking 
 
 6. Run migrations with the following command:
-    - migrate -path db/migration -database "postgres://admin:password@localhost:5432/freefortalking?sslmode=disable" -verbose up
+    - migrate -path app/db/migration -database "postgres://admin:password@localhost:5432/freefortalking?sslmode=disable" -verbose up
 
 Before runnig our migrations located in db/migrations folder, please check that our postgres container is up(status) and running with the following command.
 - docker ps -a
