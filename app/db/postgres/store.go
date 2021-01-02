@@ -8,8 +8,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func NewStore(dataSourceName string) (*Store, error) {
-	db, err := sqlx.Open("postgres", dataSourceName)
+func NewStore(dataSourceName string, dbDriver string) (*Store, error) {
+	db, err := sqlx.Open(dbDriver, dataSourceName)
 
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %w", err)

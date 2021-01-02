@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"user/app/db/postgres"
+	"user/app/utils"
 	"user/core/entities"
 	"user/core/routers"
 
@@ -10,27 +11,45 @@ import (
 )
 
 var (
-	store entities.Repository
+	appStore  entities.Repository
+	appConfig utils.Config
 )
 
-func init() {
-	postgresStore, err := postgres.NewStore("postgres://admin:password@localhost:5432/freefortalking?sslmode=disable")
+func loadAppConfig() {
+	config, err := utils.LoadConfig(".")
 
 	if err != nil {
 		log.Fatal(err)
-	} else {
-		store = postgresStore
+		return
 	}
+
+	appConfig = config
+}
+
+func loadAppDB() {
+	store, err := postgres.NewStore(appConfig.DBSource, appConfig.DBDriver)
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	appStore = store
+}
+
+func init() {
+	loadAppConfig()
+	loadAppDB()
 }
 
 func main() {
-	if store == nil {
+	if appStore == nil {
 		log.Fatal("Can not run web server before database server is up and ready")
 		return
 	}
 
-	app := fiber.New()
+	appFiber := fiber.New()
 	userRouter := routers.NewUserRouter()
-	userRouter.Register(app, store)
-	log.Fatal(app.Listen(":3000"))
+	userRouter.Register(appFiber, appStore)
+	log.Fatal(appFiber.Listen(appConfig.ServerAddress))
 }
