@@ -16,6 +16,7 @@ type User struct {
 	CountryCode string    `json:"country_code" form:"country_code" db:"country_code"`
 	Birthday    string    `json:"birthday" form:"birthday" db:"birthday"`
 	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 func (oldUser *User) Update(updatedUser User) {

@@ -1,1 +1,2 @@
 DROP TABLE IF EXISTS users CASCADE;
+DROP TRIGGER IF EXISTS users_updated_at on users;
