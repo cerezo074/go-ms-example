@@ -45,13 +45,13 @@ func (store *UserStore) CreateUser(newUser *entities.User) (execError error) {
 		}
 	}()
 
-	const query = "INSERT INTO users (email, nickname, password, image_url, country_code, birthday) VALUES ($1, $2, $3, $4, $5, $6)"
+	const query = "INSERT INTO users (email, nickname, password, image_uri, country_code, birthday) VALUES ($1, $2, $3, $4, $5, $6)"
 
 	result := store.MustExec(query,
 		newUser.Email,
 		newUser.Nickname,
 		newUser.Password,
-		newUser.ImageURL,
+		newUser.ImageURI,
 		newUser.CountryCode,
 		newUser.Birthday)
 
@@ -74,12 +74,12 @@ func (store *UserStore) UpdateUser(oldUser *entities.User) (execError error) {
 		}
 	}()
 
-	const query = "UPDATE users SET nickname = $1, password = $2, image_url = $3, country_code = $4, birthday = $5 WHERE email = $6"
+	const query = "UPDATE users SET nickname = $1, password = $2, image_uri = $3, country_code = $4, birthday = $5 WHERE email = $6"
 
 	result := store.MustExec(query,
 		oldUser.Nickname,
 		oldUser.Password,
-		oldUser.ImageURL,
+		oldUser.ImageURI,
 		oldUser.CountryCode,
 		oldUser.Birthday,
 		oldUser.Email)

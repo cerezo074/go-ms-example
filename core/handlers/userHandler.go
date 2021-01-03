@@ -2,19 +2,22 @@ package handlers
 
 import (
 	"net/http"
+	"user/app/utils/config"
 	"user/app/utils/response"
 	"user/core/entities"
+	"user/core/middleware/amazons3"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-//NewUserHandler factory method for creating a method handler to users
-func NewUserHandler(repository entities.UserRepository) MethodHandlers {
-	return userHandler{store: repository}
+//NewUserHandler factory method for creating a method handler for users
+func NewUserHandler(repository entities.UserRepository, config config.Credentials) MethodHandlers {
+	return userHandler{store: repository, credentials: config}
 }
 
 type userHandler struct {
-	store entities.UserRepository
+	store       entities.UserRepository
+	credentials config.Credentials
 }
 
 type BasicUser struct {
@@ -25,7 +28,7 @@ type BasicUser struct {
 func (handler userHandler) RegisterMethods(app *fiber.App) {
 	app.Get("/api/v1/users", handler.getUsers)
 	app.Get("/api/v1/users/email", handler.getUser)
-	app.Post("/api/v1/users", handler.newUser)
+	app.Post("/api/v1/users", amazons3.New(handler.credentials), handler.newUser)
 	app.Put("/api/v1/users", handler.updateUser)
 	app.Delete("/api/v1/users/email", handler.deleteUser)
 }
@@ -65,6 +68,10 @@ func (handler userHandler) newUser(context *fiber.Ctx) error {
 
 	if err := context.BodyParser(user); err != nil {
 		return handler.sendError(http.StatusNotFound, err.Error())
+	}
+
+	if imageURI, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_URI).(string); ok {
+		user.ImageURI = imageURI
 	}
 
 	if err := handler.store.CreateUser(user); err != nil {

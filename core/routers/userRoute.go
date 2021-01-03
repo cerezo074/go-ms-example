@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"user/app/utils/config"
 	"user/core/entities"
 	"user/core/handlers"
 
@@ -16,7 +17,7 @@ type userRoutes struct {
 }
 
 //Register insert user handlers into app
-func (router userRoutes) Register(app *fiber.App, repository entities.Repository) {
-	crudHandler := handlers.NewUserHandler(repository)
+func (router userRoutes) Register(app *fiber.App, repository entities.Repository, credentials config.Credentials) {
+	crudHandler := handlers.NewUserHandler(repository, credentials)
 	crudHandler.RegisterMethods(app)
 }

@@ -12,23 +12,23 @@ import (
 )
 
 var (
-	appStore       entities.Repository
-	appCredentials config.Credentials
+	appStore  entities.Repository
+	appConfig config.Credentials
 )
 
 func loadAppConfig() {
-	credentials, err := config.LoadCredentials(".")
+	config, err := config.LoadCredentials(".")
 
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	appCredentials = credentials
+	appConfig = config
 }
 
 func loadAppDB() {
-	store, err := postgres.NewStore(appCredentials.DBSource, appCredentials.DBDriver)
+	store, err := postgres.NewStore(appConfig.DBSource, appConfig.DBDriver)
 
 	if err != nil {
 		log.Fatal(err)
@@ -52,7 +52,8 @@ func main() {
 	appFiber := fiber.New(fiber.Config{
 		ErrorHandler: response.MakeErrorJSON,
 	})
+
 	userRouter := routers.NewUserRouter()
-	userRouter.Register(appFiber, appStore)
-	log.Fatal(appFiber.Listen(appCredentials.ServerAddress))
+	userRouter.Register(appFiber, appStore, appConfig)
+	log.Fatal(appFiber.Listen(appConfig.ServerAddress))
 }

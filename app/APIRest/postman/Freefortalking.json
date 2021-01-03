@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "21478311-2153-4d58-9272-2b540ece712c",
+		"_postman_id": "3c1a3195-802f-46a4-8e14-f921e356bb99",
 		"name": "Freefortalking",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -112,8 +112,39 @@
 				"method": "POST",
 				"header": [],
 				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\": \"example@test.com\",\n    \"nickname\": \"falcao el tigre\",\n    \"password\": \"password\",\n    \"image_url\": \"https//:www.image.com/example21.png\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/2020\"\n}",
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "elpibe@pescadito.com",
+							"type": "text"
+						},
+						{
+							"key": "nickname",
+							"value": "El pibe valderrama",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123",
+							"type": "text"
+						},
+						{
+							"key": "image_data",
+							"type": "file",
+							"src": "/Users/elipachecohoyos/Downloads/el pibe.jpg"
+						},
+						{
+							"key": "country_code",
+							"value": "COL",
+							"type": "text"
+						},
+						{
+							"key": "birthday",
+							"value": "12/22/2020",
+							"type": "text"
+						}
+					],
 					"options": {
 						"raw": {
 							"language": "json"
@@ -143,7 +174,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\": \"example@test.com\",\n    \"nickname\": \"tino asprilla\",\n    \"password\": \"123\",\n    \"image_url\": \"https//:www.image.com/condonestinto.png\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/2020\"\n}",
+					"raw": "{\n    \"email\": \"example@test.com\",\n    \"nickname\": \"tino asprilla\",\n    \"password\": \"123\",\n    \"image_uri\": \"https//:www.image.com/condonestinto.png\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/2020\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"

@@ -8,11 +8,11 @@ import (
 )
 
 type User struct {
-	ID          uuid.UUID `json:"id" form:"id" db:"id"`
+	ID          uuid.UUID `json:"id" db:"id"`
 	Email       string    `json:"email" form:"email" db:"email"`
 	Nickname    string    `json:"nickname" form:"nickname" db:"nickname"`
 	Password    string    `json:"password" form:"password" db:"password"`
-	ImageURL    string    `json:"image_url" form:"image_url" db:"image_url"`
+	ImageURI    string    `json:"image_uri" db:"image_uri"`
 	CountryCode string    `json:"country_code" form:"country_code" db:"country_code"`
 	Birthday    string    `json:"birthday" form:"birthday" db:"birthday"`
 	CreatedAt   time.Time `db:"created_at"`
@@ -22,7 +22,7 @@ type User struct {
 func (oldUser *User) Update(updatedUser User) {
 	oldUser.Nickname = updatedUser.Nickname
 	oldUser.Password = updatedUser.Password
-	oldUser.ImageURL = updatedUser.ImageURL
+	oldUser.ImageURI = updatedUser.ImageURI
 	oldUser.CountryCode = updatedUser.CountryCode
 	oldUser.Birthday = updatedUser.Birthday
 }
@@ -45,8 +45,8 @@ func (user User) IsValid() error {
 		errorMessage += "Invalid password, "
 	}
 
-	if user.ImageURL == "" {
-		errorMessage += "Invalid image url, "
+	if user.ImageURI == "" {
+		errorMessage += "Invalid image id, "
 	}
 
 	if user.CountryCode == "" {

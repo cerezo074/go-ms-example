@@ -10,7 +10,8 @@ type Credentials struct {
 	ServerAddress      string `mapstructure:"SERVER_ADDRESS"`
 	AWSAccessKeyID     string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	AWSSecretKey       string `mapstructure:"AWS_SECRET_KEY"`
-	AWSS3RegionProfile string `mapstructure:"AWS_S3_REGION_PROFILE"`
+	AWSS3ProfileRegion string `mapstructure:"AWS_S3_PROFILE_REGION"`
+	AWSS3ProfileBucket string `mapstructure:"AWS_S3_PROFILE_BUCKET"`
 }
 
 func LoadCredentials(path string) (config Credentials, err error) {
