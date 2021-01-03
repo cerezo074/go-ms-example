@@ -107,7 +107,7 @@
 			"response": []
 		},
 		{
-			"name": "Create an user",
+			"name": "Create user 1",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -116,7 +116,7 @@
 					"formdata": [
 						{
 							"key": "email",
-							"value": "elpibe@pescadito.com",
+							"value": "elpibe@pescadito.c",
 							"type": "text"
 						},
 						{
@@ -174,7 +174,68 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\": \"example@test.com\",\n    \"nickname\": \"tino asprilla\",\n    \"password\": \"123\",\n    \"image_uri\": \"https//:www.image.com/condonestinto.png\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/2020\"\n}",
+					"raw": "{\n    \"email\": \"faustino@asprilla.com\",\n    \"nickname\": \"El Tinto Asprilla\",\n    \"password\": \"123\",\n    \"image_uri\": \"s3://free4talking-user-profile-image/689ce560-0758-44c3-94e8-8297257fa296\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/1960\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/v1/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create user 2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "faustino@asprilla.com",
+							"type": "text"
+						},
+						{
+							"key": "nickname",
+							"value": "El Tino",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123",
+							"type": "text"
+						},
+						{
+							"key": "image_data",
+							"type": "file",
+							"src": "/Users/elipachecohoyos/Downloads/el tino.jpg"
+						},
+						{
+							"key": "country_code",
+							"value": "COL",
+							"type": "text"
+						},
+						{
+							"key": "birthday",
+							"value": "12/22/2020",
+							"type": "text"
+						}
+					],
 					"options": {
 						"raw": {
 							"language": "json"
