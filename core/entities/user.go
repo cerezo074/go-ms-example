@@ -70,6 +70,7 @@ type UserRepository interface {
 	CreateUser(user *User) error
 	UpdateUser(user *User) error
 	DeleteUser(email string) error
+	ExistUser(email string) bool
 }
 
 type Repository interface {

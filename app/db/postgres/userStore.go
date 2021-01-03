@@ -64,7 +64,7 @@ func (store *UserStore) CreateUser(newUser *entities.User) (execError error) {
 		return nil
 	}
 
-	return errors.New("Uknown error")
+	return errors.New("Invalid rows affected")
 }
 
 func (store *UserStore) UpdateUser(oldUser *entities.User) (execError error) {
@@ -93,7 +93,7 @@ func (store *UserStore) UpdateUser(oldUser *entities.User) (execError error) {
 		return nil
 	}
 
-	return errors.New("Uknown error")
+	return errors.New("Invalid rows affected")
 }
 
 func (store *UserStore) DeleteUser(email string) (execError error) {
@@ -114,7 +114,17 @@ func (store *UserStore) DeleteUser(email string) (execError error) {
 		return nil
 	}
 
-	return errors.New("Uknown error")
+	return errors.New("Invalid rows affected")
+}
+
+func (store *UserStore) ExistUser(email string) bool {
+	var rows int
+
+	if err := store.Get(&rows, "SELECT count(*) FROM users WHERE email = $1", email); err != nil {
+		return false
+	}
+
+	return rows == 1
 }
 
 func (store *UserStore) processRecover(value interface{}) error {

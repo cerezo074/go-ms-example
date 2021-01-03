@@ -6,6 +6,7 @@ import (
 	"user/app/utils/response"
 	"user/core/entities"
 	"user/core/middleware/amazons3"
+	"user/core/middleware/validator"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -28,7 +29,7 @@ type BasicUser struct {
 func (handler userHandler) RegisterMethods(app *fiber.App) {
 	app.Get("/api/v1/users", handler.getUsers)
 	app.Get("/api/v1/users/email", handler.getUser)
-	app.Post("/api/v1/users", amazons3.New(handler.credentials), handler.newUser)
+	app.Post("/api/v1/users", validator.DuplicatedUser(handler.store), amazons3.New(handler.credentials), handler.newUser)
 	app.Put("/api/v1/users", handler.updateUser)
 	app.Delete("/api/v1/users/email", handler.deleteUser)
 }
