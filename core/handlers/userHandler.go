@@ -34,81 +34,80 @@ func (handler userHandler) getUsers(context *fiber.Ctx) error {
 	users, err := handler.store.Users()
 
 	if err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusInternalServerError, Message: err.Error()}, context)
+		return handler.sendError(http.StatusInternalServerError, err.Error())
 	}
 
 	if len(users) == 0 {
-		return handler.send([]entities.User{}, nil, context)
+		return response.MakeSuccessJSON([]entities.User{}, context)
 	}
 
-	return handler.send(users, nil, context)
+	return response.MakeSuccessJSON(users, context)
 }
 
 func (handler userHandler) getUser(context *fiber.Ctx) error {
 	userEmail := context.Query("address")
 
 	if userEmail == "" {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: "address is not present on url as a query param"}, context)
+		return handler.sendError(http.StatusBadRequest, "address is not present on url as a query param")
 	}
 
 	user, err := handler.store.User(userEmail)
 
 	if err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusNotFound, Message: err.Error()}, context)
+		return handler.sendError(http.StatusNotFound, err.Error())
 	}
 
-	return handler.send(user, nil, context)
+	return response.MakeSuccessJSON(user, context)
 }
 
 func (handler userHandler) newUser(context *fiber.Ctx) error {
 	user := new(entities.User)
 
 	if err := context.BodyParser(user); err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: err.Error()}, context)
+		return handler.sendError(http.StatusNotFound, err.Error())
 	}
 
 	if err := handler.store.CreateUser(user); err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusInternalServerError, Message: err.Error()}, context)
+		return handler.sendError(http.StatusBadRequest, err.Error())
 	}
 
-	return handler.send("User was created successfully", nil, context)
+	return response.MakeSuccessJSON("user was created successfully", context)
 }
 
 func (handler userHandler) updateUser(context *fiber.Ctx) error {
 	updatedUser := new(entities.User)
 	if err := context.BodyParser(updatedUser); err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: err.Error()}, context)
+		return handler.sendError(http.StatusBadRequest, err.Error())
 	}
 
 	if err := updatedUser.IsValid(); err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: err.Error()}, context)
+		return handler.sendError(http.StatusBadRequest, err.Error())
 	}
 
 	if err := handler.store.UpdateUser(updatedUser); err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusInternalServerError, Message: err.Error()}, context)
+		return handler.sendError(http.StatusInternalServerError, err.Error())
 	}
 
-	return handler.send("user updated successfully", nil, context)
+	return response.MakeSuccessJSON("user updated successfully", context)
 }
 
 func (handler userHandler) deleteUser(context *fiber.Ctx) error {
 	userEmail := context.Query("address")
 
 	if userEmail == "" {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusBadRequest, Message: "address is not present on url as a query param"}, context)
+		return handler.sendError(http.StatusBadRequest, "address is not present on url as a query param")
 	}
 
 	if err := handler.store.DeleteUser(userEmail); err != nil {
-		return handler.send(nil, &response.ResponseError{StatusCode: http.StatusInternalServerError, Message: err.Error()}, context)
+		return handler.sendError(http.StatusInternalServerError, err.Error())
 	}
 
-	return handler.send("user deleted successfully", nil, context)
+	return response.MakeSuccessJSON("user deleted successfully", context)
 }
 
-func (handler userHandler) send(value interface{}, err *response.ResponseError, context *fiber.Ctx) error {
-	if err != nil {
-		return response.MakeJSON(response.Fail, nil, err, context)
+func (handler userHandler) sendError(httpStatusCode int, description string) error {
+	return response.ResponseError{
+		StatusCode: httpStatusCode,
+		Message:    description,
 	}
-
-	return response.MakeJSON(response.Success, &value, nil, context)
 }

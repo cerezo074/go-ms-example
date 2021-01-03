@@ -1,10 +1,10 @@
-package utils
+package config
 
 import "github.com/spf13/viper"
 
-//Config stores all configuration of the application.
+//Credentials stores all configuration of the application.
 //The values are read by viper from a config file or environment variables
-type Config struct {
+type Credentials struct {
 	DBDriver           string `mapstructure:"DB_DRIVER"`
 	DBSource           string `mapstructure:"DB_SOURCE"`
 	ServerAddress      string `mapstructure:"SERVER_ADDRESS"`
@@ -13,7 +13,7 @@ type Config struct {
 	AWSS3RegionProfile string `mapstructure:"AWS_S3_REGION_PROFILE"`
 }
 
-func LoadConfig(path string) (config Config, err error) {
+func LoadCredentials(path string) (config Credentials, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")

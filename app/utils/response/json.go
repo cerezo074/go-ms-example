@@ -6,11 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type JSONResponseType int
-
 const (
-	Success JSONResponseType = iota
-	Fail    JSONResponseType = iota
+	data = "data"
 )
 
 type JSONError struct {
@@ -37,22 +34,26 @@ func (e ResponseError) JSON() ([]byte, error) {
 	return encodedData, nil
 }
 
-func MakeJSON(responseType JSONResponseType, output *interface{}, err *ResponseError, context *fiber.Ctx) error {
-	switch responseType {
-	case Success:
-		return context.JSON(fiber.Map{
-			"data": output,
-		})
-	case Fail:
-		jsonData, jsonError := err.JSON()
+func MakeSuccessJSON(output interface{}, context *fiber.Ctx) error {
+	return context.JSON(fiber.Map{
+		data: output,
+	})
+}
+
+func MakeErrorJSON(context *fiber.Ctx, err error) error {
+	if responseError, ok := err.(ResponseError); ok {
+		jsonData, jsonError := responseError.JSON()
 		if jsonError != nil {
 			return err
 		}
 
 		context.Set("Content-Type", "application/json")
-		context.Status(err.StatusCode).Send(jsonData)
-		return nil
-	default:
-		return nil
+		return context.Status(responseError.StatusCode).Send(jsonData)
 	}
+
+	if err != nil {
+		return context.Status(500).SendString("Internal Server Error")
+	}
+
+	return nil
 }

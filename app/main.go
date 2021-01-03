@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 	"user/app/db/postgres"
-	"user/app/utils"
+	"user/app/utils/config"
+	"user/app/utils/response"
 	"user/core/entities"
 	"user/core/routers"
 
@@ -11,23 +12,23 @@ import (
 )
 
 var (
-	appStore  entities.Repository
-	appConfig utils.Config
+	appStore       entities.Repository
+	appCredentials config.Credentials
 )
 
 func loadAppConfig() {
-	config, err := utils.LoadConfig(".")
+	credentials, err := config.LoadCredentials(".")
 
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	appConfig = config
+	appCredentials = credentials
 }
 
 func loadAppDB() {
-	store, err := postgres.NewStore(appConfig.DBSource, appConfig.DBDriver)
+	store, err := postgres.NewStore(appCredentials.DBSource, appCredentials.DBDriver)
 
 	if err != nil {
 		log.Fatal(err)
@@ -48,8 +49,10 @@ func main() {
 		return
 	}
 
-	appFiber := fiber.New()
+	appFiber := fiber.New(fiber.Config{
+		ErrorHandler: response.MakeErrorJSON,
+	})
 	userRouter := routers.NewUserRouter()
 	userRouter.Register(appFiber, appStore)
-	log.Fatal(appFiber.Listen(appConfig.ServerAddress))
+	log.Fatal(appFiber.Listen(appCredentials.ServerAddress))
 }
