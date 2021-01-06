@@ -18,12 +18,12 @@ import (
 )
 
 const (
-	S3_IMAGE_FIELD        = "image_data"
-	S3_UPLOADED_IMAGE_URI = "image_uri"
-	S3_DOWNLOADED_IMAGE   = "image_file"
-	S3_ACL_POLICY         = ""
-	S3_URI_SCHEME         = "s3"
-	DEFAULT_IMAGE         = "133702635_2921149807988560_5555061904179489233_o.jpg"
+	S3_IMAGE_FIELD           = "image_data"
+	S3_UPLOADED_IMAGE_ID     = "image_id"
+	S3_DOWNLOADED_IMAGE_FILE = "image_file"
+	S3_ACL_POLICY            = ""
+	S3_URI_SCHEME            = "s3"
+	DEFAULT_IMAGE            = "133702635_2921149807988560_5555061904179489233_o.jpg"
 )
 
 type AWSS3Config struct {
@@ -65,7 +65,7 @@ func NewUploader(credentials config.Credentials) fiber.Handler {
 		}
 
 		imageURI, err := uploadImage(session, S3Credentials, imageReader, context)
-		context.Locals(S3_UPLOADED_IMAGE_URI, imageURI)
+		context.Locals(S3_UPLOADED_IMAGE_ID, imageURI)
 
 		return context.Next()
 	}
@@ -86,7 +86,7 @@ func NewDownloader(credentials config.Credentials) fiber.Handler {
 			return err
 		}
 
-		context.Locals(S3_DOWNLOADED_IMAGE, result)
+		context.Locals(S3_DOWNLOADED_IMAGE_FILE, result)
 
 		return context.Next()
 	}

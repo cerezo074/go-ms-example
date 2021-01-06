@@ -74,7 +74,7 @@ func (store *UserStore) UpdateUser(oldUser *entities.User) (execError error) {
 		}
 	}()
 
-	const query = "UPDATE users SET nickname = $1, password = $2, image_uri = $3, country_code = $4, birthday = $5 WHERE email = $6"
+	const query = "UPDATE users SET nickname = $1, password = $2, image_id = $3, country_code = $4, birthday = $5 WHERE email = $6"
 
 	result := store.MustExec(query,
 		oldUser.Nickname,

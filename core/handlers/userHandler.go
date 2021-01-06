@@ -71,7 +71,7 @@ func (handler userHandler) getUser(context *fiber.Ctx) error {
 }
 
 func (handler userHandler) getImage(context *fiber.Ctx) error {
-	if s3DataFile, ok := context.Locals(amazons3.S3_DOWNLOADED_IMAGE).(*amazons3.AWSBufferedFile); ok {
+	if s3DataFile, ok := context.Locals(amazons3.S3_DOWNLOADED_IMAGE_FILE).(*amazons3.AWSBufferedFile); ok {
 		return context.Status(http.StatusOK).SendStream(bytes.NewReader(s3DataFile.Data), int(s3DataFile.Size))
 	}
 
@@ -85,7 +85,7 @@ func (handler userHandler) newUser(context *fiber.Ctx) error {
 		return response.MakeErrorJSON(http.StatusNotFound, err.Error())
 	}
 
-	if imageURI, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_URI).(string); ok {
+	if imageURI, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_ID).(string); ok {
 		user.ImageID = imagePath + imageURI
 	} else {
 		user.ImageID = imagePath + amazons3.DEFAULT_IMAGE
