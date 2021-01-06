@@ -86,9 +86,9 @@ func (handler userHandler) newUser(context *fiber.Ctx) error {
 	}
 
 	if imageURI, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_URI).(string); ok {
-		user.ImageURI = imagePath + imageURI
+		user.ImageID = imagePath + imageURI
 	} else {
-		user.ImageURI = imagePath + amazons3.DEFAULT_IMAGE
+		user.ImageID = imagePath + amazons3.DEFAULT_IMAGE
 	}
 
 	if err := handler.store.CreateUser(user); err != nil {

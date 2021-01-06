@@ -113,7 +113,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\": \"faustino@asprilla.com\",\n    \"nickname\": \"El Tinto Asprilla\",\n    \"password\": \"123\",\n    \"image_uri\": \"s3://free4talking-user-profile-image/689ce560-0758-44c3-94e8-8297257fa296\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/1960\"\n}",
+					"raw": "{\n    \"email\": \"faustino@asprilla.com\",\n    \"nickname\": \"El Tinto Asprilla\",\n    \"password\": \"123\",\n    \"image_id\": \"s3://free4talking-user-profile-image/689ce560-0758-44c3-94e8-8297257fa296\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/1960\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"

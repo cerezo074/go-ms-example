@@ -12,7 +12,7 @@ type User struct {
 	Email       string    `json:"email" form:"email" db:"email"`
 	Nickname    string    `json:"nickname" form:"nickname" db:"nickname"`
 	Password    string    `json:"password" form:"password" db:"password"`
-	ImageURI    string    `json:"image_uri" db:"image_uri"`
+	ImageID     string    `json:"image_id" db:"image_id"`
 	CountryCode string    `json:"country_code" form:"country_code" db:"country_code"`
 	Birthday    string    `json:"birthday" form:"birthday" db:"birthday"`
 	CreatedAt   time.Time `db:"created_at"`
@@ -22,7 +22,7 @@ type User struct {
 func (oldUser *User) Update(updatedUser User) {
 	oldUser.Nickname = updatedUser.Nickname
 	oldUser.Password = updatedUser.Password
-	oldUser.ImageURI = updatedUser.ImageURI
+	oldUser.ImageID = updatedUser.ImageID
 	oldUser.CountryCode = updatedUser.CountryCode
 	oldUser.Birthday = updatedUser.Birthday
 }
@@ -45,7 +45,7 @@ func (user User) IsValid() error {
 		errorMessage += "Invalid password, "
 	}
 
-	if user.ImageURI == "" {
+	if user.ImageID == "" {
 		errorMessage += "Invalid image id, "
 	}
 

@@ -3,7 +3,7 @@ CREATE TABLE users (
   email varchar PRIMARY KEY,
   nickname varchar NOT NULL,
   password varchar NOT NULL,
-  image_uri varchar NOT NULL,
+  image_id varchar NOT NULL,
   country_code varchar NOT NULL,
   birthday date NOT NULL,
   created_at timestamptz DEFAULT (now()),
