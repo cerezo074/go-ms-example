@@ -35,7 +35,6 @@ func (handler userHandler) RegisterMethods(app *fiber.App) {
 	app.Get("/api/v1/users", handler.getUsers)
 	app.Get("/api/v1/users/email", handler.getUser)
 	app.Get(imagePath+":id", amazons3.NewDownloader(handler.credentials), handler.getImage)
-	app.Get(imagePath, amazons3.NewDownloader(handler.credentials), handler.getImage)
 	app.Post("/api/v1/users", validator.DuplicatedUser(handler.store), amazons3.NewUploader(handler.credentials), handler.newUser)
 	app.Put("/api/v1/users", handler.updateUser)
 	app.Delete("/api/v1/users/email", handler.deleteUser)
@@ -88,6 +87,8 @@ func (handler userHandler) newUser(context *fiber.Ctx) error {
 
 	if imageURI, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_URI).(string); ok {
 		user.ImageURI = imagePath + imageURI
+	} else {
+		user.ImageURI = imagePath + amazons3.DEFAULT_IMAGE
 	}
 
 	if err := handler.store.CreateUser(user); err != nil {

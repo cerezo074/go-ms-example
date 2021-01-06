@@ -2,7 +2,6 @@ package amazons3
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -19,7 +18,7 @@ import (
 )
 
 const (
-	S3_IMAGE_FIELD        = "image_data_field"
+	S3_IMAGE_FIELD        = "image_data"
 	S3_UPLOADED_IMAGE_URI = "image_uri"
 	S3_DOWNLOADED_IMAGE   = "image_file"
 	S3_ACL_POLICY         = ""
@@ -54,15 +53,15 @@ func NewUploader(credentials config.Credentials) fiber.Handler {
 
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
-			log.Fatalln(err.Error())
-			return nil
+			//TODO: Log this error
+			return context.Next()
 		}
 
 		imageReader, err := getImageReader(context)
 
 		if err != nil {
-			log.Fatalln(err.Error())
-			return nil
+			//TODO: Log this error
+			return context.Next()
 		}
 
 		imageURI, err := uploadImage(session, S3Credentials, imageReader, context)
@@ -78,8 +77,7 @@ func NewDownloader(credentials config.Credentials) fiber.Handler {
 
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
-			log.Fatalln(err.Error())
-			return nil
+			return response.MakeErrorJSON(http.StatusInternalServerError, err.Error())
 		}
 
 		result, err := downloadImage(session, S3Credentials, context)
