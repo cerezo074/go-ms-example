@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3c1a3195-802f-46a4-8e14-f921e356bb99",
+		"_postman_id": "4d5b246a-7554-4980-a627-8022e911b3e4",
 		"name": "Freefortalking",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -15,7 +15,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"elichigo\",\n    \"password\": \"abcd\",\n    \"email\": \"a@f.co\"\n}",
+					"raw": "",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -84,7 +84,7 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/api/v1/users/email?address=example@test.com",
+					"raw": "http://localhost:3000/api/v1/users/email?address=elpibe@pescadito.c",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -99,8 +99,38 @@
 					"query": [
 						{
 							"key": "address",
-							"value": "example@test.com"
+							"value": "elpibe@pescadito.c"
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update a user",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"faustino@asprilla.com\",\n    \"nickname\": \"El Tinto Asprilla\",\n    \"password\": \"123\",\n    \"image_uri\": \"s3://free4talking-user-profile-image/689ce560-0758-44c3-94e8-8297257fa296\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/1960\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/v1/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"users"
 					]
 				}
 			},
@@ -168,36 +198,6 @@
 			"response": []
 		},
 		{
-			"name": "Update a user",
-			"request": {
-				"method": "PUT",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\": \"faustino@asprilla.com\",\n    \"nickname\": \"El Tinto Asprilla\",\n    \"password\": \"123\",\n    \"image_uri\": \"s3://free4talking-user-profile-image/689ce560-0758-44c3-94e8-8297257fa296\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/1960\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:3000/api/v1/users",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"api",
-						"v1",
-						"users"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Create user 2",
 			"request": {
 				"method": "POST",
@@ -223,7 +223,7 @@
 						{
 							"key": "image_data",
 							"type": "file",
-							"src": "/Users/elipachecohoyos/Downloads/el tino.jpg"
+							"src": []
 						},
 						{
 							"key": "country_code",
@@ -253,6 +253,29 @@
 						"api",
 						"v1",
 						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Profile Image",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/v1/users/image/2ac2be96-c956-42b1-9ee0-e697341acd6e",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"v1",
+						"users",
+						"image",
+						"2ac2be96-c956-42b1-9ee0-e697341acd6e"
 					]
 				}
 			},
