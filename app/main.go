@@ -50,7 +50,7 @@ func main() {
 	}
 
 	appFiber := fiber.New(fiber.Config{
-		ErrorHandler: response.MakeErrorJSON,
+		ErrorHandler: response.HandleJSONError,
 	})
 
 	userRouter := routers.NewUserRouter()

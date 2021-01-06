@@ -40,7 +40,7 @@ func MakeSuccessJSON(output interface{}, context *fiber.Ctx) error {
 	})
 }
 
-func MakeErrorJSON(context *fiber.Ctx, err error) error {
+func HandleJSONError(context *fiber.Ctx, err error) error {
 	if responseError, ok := err.(ResponseError); ok {
 		jsonData, jsonError := responseError.JSON()
 		if jsonError != nil {
@@ -56,4 +56,15 @@ func MakeErrorJSON(context *fiber.Ctx, err error) error {
 	}
 
 	return nil
+}
+
+func MakeErrorJSON(httpStatusCode int, description string) error {
+	return sendError(httpStatusCode, description)
+}
+
+func sendError(httpStatusCode int, description string) error {
+	return ResponseError{
+		StatusCode: httpStatusCode,
+		Message:    description,
+	}
 }
