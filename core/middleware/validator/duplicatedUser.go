@@ -18,7 +18,7 @@ func DuplicatedUser(userStore entities.UserRepository) fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		email := context.FormValue(EMAIL_FIELD)
 
-		if !isValidEmailFormat(email) {
+		if !IsValidEmailFormat(email) {
 			return buildInvalidFormatError(email)
 		}
 
@@ -38,7 +38,7 @@ func buildInvalidFormatError(email string) error {
 	return response.ResponseError{StatusCode: http.StatusBadRequest, Message: "invalid email(" + email + ") format"}
 }
 
-func isValidEmailFormat(email string) bool {
+func IsValidEmailFormat(email string) bool {
 	if len(email) < 3 && len(email) > 254 {
 		return false
 	}

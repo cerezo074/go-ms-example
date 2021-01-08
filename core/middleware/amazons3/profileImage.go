@@ -7,6 +7,8 @@ import (
 	"strings"
 	"user/app/utils/config"
 	"user/app/utils/response"
+	"user/core/entities"
+	"user/core/middleware/validator"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -18,6 +20,7 @@ import (
 )
 
 const (
+	S3_USER_ENTITY           = "user_entity"
 	S3_IMAGE_FIELD           = "image_data"
 	S3_UPLOADED_IMAGE_ID     = "image_id"
 	S3_DOWNLOADED_IMAGE_FILE = "image_file"
@@ -87,6 +90,36 @@ func NewDownloader(credentials config.Credentials) fiber.Handler {
 		}
 
 		context.Locals(S3_DOWNLOADED_IMAGE_FILE, result)
+
+		return context.Next()
+	}
+}
+
+func DeleteImage(credentials config.Credentials, userStore entities.UserRepository) fiber.Handler {
+	return func(context *fiber.Ctx) error {
+		user, filename := getUser(context, userStore)
+
+		if user == nil {
+			return response.MakeErrorJSON(http.StatusBadRequest, "User invalid")
+		}
+
+		context.Locals(S3_USER_ENTITY, *user)
+		if filename == nil {
+			return context.Next()
+		}
+
+		S3Credentials := BuildAWSS3Config(credentials)
+		session, err := BuildAWSSession(S3Credentials)
+
+		if err != nil {
+			return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
+		}
+
+		err = deleteProfileImage(session, S3Credentials, *filename)
+
+		if err != nil {
+			return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
+		}
 
 		return context.Next()
 	}
@@ -172,4 +205,49 @@ func buildS3ImageURI(imageID string, bucketName string) string {
 	}
 
 	return url.Path
+}
+
+func deleteProfileImage(session *session.Session, config AWSS3Config, objectID string) error {
+	svc := s3.New(session)
+
+	_, err := svc.DeleteObject(&s3.DeleteObjectInput{Bucket: aws.String(config.S3BucketName), Key: aws.String(objectID)})
+	if err != nil {
+		return err
+	}
+
+	err = svc.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(config.S3BucketName),
+		Key:    aws.String(objectID),
+	})
+
+	return err
+}
+
+func getUser(context *fiber.Ctx, userStore entities.UserRepository) (*entities.User, *string) {
+	email := context.Query("address")
+
+	if !validator.IsValidEmailFormat(email) {
+		return nil, nil
+	}
+
+	user, err := userStore.User(email)
+
+	if err != nil {
+		return nil, nil
+	}
+
+	componentPaths := strings.Split(user.ImageID, "/")
+
+	if len(componentPaths) <= 0 {
+		return nil, nil
+	}
+
+	lastIndex := len(componentPaths) - 1
+	lastComponent := componentPaths[lastIndex]
+
+	if lastComponent == DEFAULT_IMAGE {
+		return &user, nil
+	}
+
+	return &user, &lastComponent
 }

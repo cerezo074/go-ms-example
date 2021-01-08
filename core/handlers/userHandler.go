@@ -37,7 +37,7 @@ func (handler userHandler) RegisterMethods(app *fiber.App) {
 	app.Get(imagePath+":id", amazons3.NewDownloader(handler.credentials), handler.getImage)
 	app.Post("/api/v1/users", validator.DuplicatedUser(handler.store), amazons3.NewUploader(handler.credentials), handler.newUser)
 	app.Put("/api/v1/users", handler.updateUser)
-	app.Delete("/api/v1/users/email", handler.deleteUser)
+	app.Delete("/api/v1/users/email", amazons3.DeleteImage(handler.credentials, handler.store), handler.deleteUser)
 }
 
 func (handler userHandler) getUsers(context *fiber.Ctx) error {
@@ -116,14 +116,14 @@ func (handler userHandler) updateUser(context *fiber.Ctx) error {
 }
 
 func (handler userHandler) deleteUser(context *fiber.Ctx) error {
-	userEmail := context.Query("address")
+	var user entities.User
 
-	if userEmail == "" {
-		return response.MakeErrorJSON(http.StatusBadRequest, "address is not present on url as a query param")
+	if assertion, ok := context.Locals(amazons3.S3_USER_ENTITY).(entities.User); ok {
+		user = assertion
 	}
 
-	if err := handler.store.DeleteUser(userEmail); err != nil {
-		return response.MakeErrorJSON(http.StatusInternalServerError, err.Error())
+	if err := handler.store.DeleteUser(user.Email); err != nil {
+		return response.MakeErrorJSON(http.StatusInternalServerError, "Invalid user")
 	}
 
 	return response.MakeSuccessJSON("user deleted successfully", context)
