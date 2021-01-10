@@ -7,21 +7,9 @@
 	"item": [
 		{
 			"name": "Get all users",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
 				"url": {
 					"raw": "http://localhost:3000/api/v1/users",
 					"protocol": "http",
@@ -84,7 +72,7 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/api/v1/users/email?address=elpibe@pescadito.c",
+					"raw": "http://localhost:3000/api/v1/users/email?address=faustino@asprilla.com",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -99,7 +87,7 @@
 					"query": [
 						{
 							"key": "address",
-							"value": "elpibe@pescadito.c"
+							"value": "faustino@asprilla.com"
 						}
 					]
 				}
@@ -112,8 +100,39 @@
 				"method": "PUT",
 				"header": [],
 				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\": \"faustino@asprilla.com\",\n    \"nickname\": \"El Tinto Asprilla\",\n    \"password\": \"123\",\n    \"image_id\": \"s3://free4talking-user-profile-image/689ce560-0758-44c3-94e8-8297257fa296\",\n    \"country_code\": \"COL\",\n    \"birthday\": \"12/22/1960\"\n}",
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "faustino@asprilla.com",
+							"type": "text"
+						},
+						{
+							"key": "nickname",
+							"value": "El Tino Asprilla",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "456",
+							"type": "text"
+						},
+						{
+							"key": "image_data",
+							"type": "file",
+							"src": "/Users/eli.pacheco/Downloads/asprilla.jpg"
+						},
+						{
+							"key": "country_code",
+							"value": "COL",
+							"type": "text"
+						},
+						{
+							"key": "birthday",
+							"value": "12/22/1960",
+							"type": "text"
+						}
+					],
 					"options": {
 						"raw": {
 							"language": "json"
@@ -162,7 +181,7 @@
 						{
 							"key": "image_data",
 							"type": "file",
-							"src": "/Users/elipachecohoyos/Downloads/el pibe.jpg"
+							"src": "/Users/eli.pacheco/Downloads/pibe.jpeg"
 						},
 						{
 							"key": "country_code",
