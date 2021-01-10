@@ -26,7 +26,11 @@ const (
 	S3_DOWNLOADED_IMAGE_FILE = "image_file"
 	S3_ACL_POLICY            = ""
 	S3_URI_SCHEME            = "s3"
-	DEFAULT_IMAGE            = "133702635_2921149807988560_5555061904179489233_o.jpg"
+	EMAIL_KEY                = "email"
+	ADDRESS_KEY              = "address"
+	IMAGE_ID_KEY             = "id"
+	INVALID_USER_ERROR       = "Invalid User"
+	DEFAULT_IMAGE            = "default_1.jpg"
 )
 
 type AWSS3Config struct {
@@ -52,22 +56,22 @@ func BuildAWSS3Config(credentials config.Credentials) AWSS3Config {
 
 func NewUploader(credentials config.Credentials) fiber.Handler {
 	return func(context *fiber.Ctx) error {
-		S3Credentials := BuildAWSS3Config(credentials)
+		imageReader, err := getImageReader(context)
+		if err != nil {
+			//TODO: Log this error
+			return context.Next()
+		}
 
+		fileID := uuid.New()
+		filename := fileID.String()
+		S3Credentials := BuildAWSS3Config(credentials)
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
 			//TODO: Log this error
 			return context.Next()
 		}
 
-		imageReader, err := getImageReader(context)
-
-		if err != nil {
-			//TODO: Log this error
-			return context.Next()
-		}
-
-		imageURI, err := uploadImage(session, S3Credentials, imageReader, context)
+		imageURI, err := uploadImage(session, S3Credentials, imageReader, filename, context)
 		context.Locals(S3_UPLOADED_IMAGE_ID, imageURI)
 
 		return context.Next()
@@ -77,14 +81,12 @@ func NewUploader(credentials config.Credentials) fiber.Handler {
 func NewDownloader(credentials config.Credentials) fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		S3Credentials := BuildAWSS3Config(credentials)
-
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
 			return response.MakeErrorJSON(http.StatusInternalServerError, err.Error())
 		}
 
 		result, err := downloadImage(session, S3Credentials, context)
-
 		if err != nil {
 			return err
 		}
@@ -97,10 +99,10 @@ func NewDownloader(credentials config.Credentials) fiber.Handler {
 
 func DeleteImage(credentials config.Credentials, userStore entities.UserRepository) fiber.Handler {
 	return func(context *fiber.Ctx) error {
-		user, filename := getUser(context, userStore)
-
+		email := context.Query(ADDRESS_KEY)
+		user, filename := getUser(email, context, userStore)
 		if user == nil {
-			return response.MakeErrorJSON(http.StatusBadRequest, "User invalid")
+			return response.MakeErrorJSON(http.StatusNotFound, INVALID_USER_ERROR)
 		}
 
 		context.Locals(S3_USER_ENTITY, *user)
@@ -110,16 +112,48 @@ func DeleteImage(credentials config.Credentials, userStore entities.UserReposito
 
 		S3Credentials := BuildAWSS3Config(credentials)
 		session, err := BuildAWSSession(S3Credentials)
-
 		if err != nil {
 			return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
 		}
 
 		err = deleteProfileImage(session, S3Credentials, *filename)
-
 		if err != nil {
 			return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
 		}
+
+		return context.Next()
+	}
+}
+
+func UpdateImage(credentials config.Credentials, userStore entities.UserRepository) fiber.Handler {
+	return func(context *fiber.Ctx) error {
+		imageReader, err := getImageReader(context)
+		if err != nil {
+			//TODO: Log this error
+			context.Locals(S3_UPLOADED_IMAGE_ID, DEFAULT_IMAGE)
+			return context.Next()
+		}
+
+		email := context.FormValue(EMAIL_KEY, "")
+		user, filename := getUser(email, context, userStore)
+		if user == nil {
+			return response.MakeErrorJSON(http.StatusNotFound, INVALID_USER_ERROR)
+		}
+
+		if filename == nil {
+			randomID := uuid.New().String()
+			filename = &randomID
+		}
+
+		S3Credentials := BuildAWSS3Config(credentials)
+		session, err := BuildAWSSession(S3Credentials)
+		if err != nil {
+			//TODO: Log this error
+			return context.Next()
+		}
+
+		imageURI, err := uploadImage(session, S3Credentials, imageReader, *filename, context)
+		context.Locals(S3_UPLOADED_IMAGE_ID, imageURI)
 
 		return context.Next()
 	}
@@ -137,15 +171,13 @@ func BuildAWSSession(config AWSS3Config) (*session.Session, error) {
 }
 
 func downloadImage(session *session.Session, config AWSS3Config, context *fiber.Ctx) (*AWSBufferedFile, error) {
-	imageIDParam := context.Params("id")
+	imageIDParam := context.Params(IMAGE_ID_KEY)
 	imageID := strings.ReplaceAll(imageIDParam, " ", "")
-
 	if len(imageID) <= 0 {
 		imageID = DEFAULT_IMAGE
 	}
 
 	downloader := s3manager.NewDownloader(session)
-
 	s3object := &s3.GetObjectInput{
 		Bucket: aws.String(config.S3BucketName),
 		Key:    aws.String(imageID),
@@ -153,24 +185,22 @@ func downloadImage(session *session.Session, config AWSS3Config, context *fiber.
 
 	myFile := &aws.WriteAtBuffer{}
 	bytesDownloaded, err := downloader.Download(myFile, s3object)
-	data := myFile.Bytes()
-
 	if err != nil {
 		return nil, response.MakeErrorJSON(http.StatusBadGateway, err.Error())
 	}
 
+	data := myFile.Bytes()
+
 	return &AWSBufferedFile{Data: data, Size: bytesDownloaded}, nil
 }
 
-func uploadImage(session *session.Session, config AWSS3Config, imageReader io.Reader, context *fiber.Ctx) (string, error) {
+func uploadImage(session *session.Session, config AWSS3Config, imageReader io.Reader, fileID string, context *fiber.Ctx) (string, error) {
 	uploader := s3manager.NewUploader(session)
-	fileID := uuid.New()
-	filename := fileID.String()
 
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(config.S3BucketName),
 		ACL:    aws.String(S3_ACL_POLICY),
-		Key:    aws.String(filename),
+		Key:    aws.String(fileID),
 		Body:   imageReader,
 	})
 
@@ -178,18 +208,16 @@ func uploadImage(session *session.Session, config AWSS3Config, imageReader io.Re
 		return "", err
 	}
 
-	return (buildS3ImageURI(filename, config.S3BucketName)), nil
+	return (buildS3ImageURI(fileID, config.S3BucketName)), nil
 }
 
 func getImageReader(context *fiber.Ctx) (io.Reader, error) {
 	file, err := context.FormFile(S3_IMAGE_FIELD)
-
 	if err != nil {
 		return nil, err
 	}
 
 	fileHeader, err := file.Open()
-
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +237,6 @@ func buildS3ImageURI(imageID string, bucketName string) string {
 
 func deleteProfileImage(session *session.Session, config AWSS3Config, objectID string) error {
 	svc := s3.New(session)
-
 	_, err := svc.DeleteObject(&s3.DeleteObjectInput{Bucket: aws.String(config.S3BucketName), Key: aws.String(objectID)})
 	if err != nil {
 		return err
@@ -223,28 +250,23 @@ func deleteProfileImage(session *session.Session, config AWSS3Config, objectID s
 	return err
 }
 
-func getUser(context *fiber.Ctx, userStore entities.UserRepository) (*entities.User, *string) {
-	email := context.Query("address")
-
+func getUser(email string, context *fiber.Ctx, userStore entities.UserRepository) (*entities.User, *string) {
 	if !validator.IsValidEmailFormat(email) {
 		return nil, nil
 	}
 
 	user, err := userStore.User(email)
-
 	if err != nil {
 		return nil, nil
 	}
 
 	componentPaths := strings.Split(user.ImageID, "/")
-
 	if len(componentPaths) <= 0 {
 		return nil, nil
 	}
 
 	lastIndex := len(componentPaths) - 1
 	lastComponent := componentPaths[lastIndex]
-
 	if lastComponent == DEFAULT_IMAGE {
 		return &user, nil
 	}

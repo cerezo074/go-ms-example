@@ -36,7 +36,7 @@ func (handler userHandler) RegisterMethods(app *fiber.App) {
 	app.Get("/api/v1/users/email", handler.getUser)
 	app.Get(imagePath+":id", amazons3.NewDownloader(handler.credentials), handler.getImage)
 	app.Post("/api/v1/users", validator.DuplicatedUser(handler.store), amazons3.NewUploader(handler.credentials), handler.newUser)
-	app.Put("/api/v1/users", handler.updateUser)
+	app.Put("/api/v1/users", amazons3.UpdateImage(handler.credentials, handler.store), handler.updateUser)
 	app.Delete("/api/v1/users/email", amazons3.DeleteImage(handler.credentials, handler.store), handler.deleteUser)
 }
 
@@ -102,6 +102,12 @@ func (handler userHandler) updateUser(context *fiber.Ctx) error {
 	updatedUser := new(entities.User)
 	if err := context.BodyParser(updatedUser); err != nil {
 		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
+	}
+
+	if imageID, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_ID).(string); ok {
+		updatedUser.ImageID = imagePath + imageID
+	} else {
+		updatedUser.ImageID = imagePath + amazons3.DEFAULT_IMAGE
 	}
 
 	if err := updatedUser.IsValid(); err != nil {
