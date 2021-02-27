@@ -33,6 +33,20 @@ const (
 	DEFAULT_IMAGE            = "default_1.jpg"
 )
 
+type S3ProfileImageServices interface {
+	NewUploader() fiber.Handler
+	NewDownloader() fiber.Handler
+	DeleteImage() fiber.Handler
+	UpdateImage() fiber.Handler
+}
+
+type S3ProfileImageProvider struct {
+	S3ProfileImageServices
+	credentials   config.Credentials
+	userStore     entities.UserRepository
+	userValidator validator.UserValidatorService
+}
+
 type AWSS3Config struct {
 	AccessKeyID  string
 	SecretKey    string
@@ -54,7 +68,7 @@ func BuildAWSS3Config(credentials config.Credentials) AWSS3Config {
 	}
 }
 
-func NewUploader(credentials config.Credentials) fiber.Handler {
+func (self S3ProfileImageProvider) NewUploader() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		imageReader, err := getImageReader(context)
 		if err != nil {
@@ -64,7 +78,7 @@ func NewUploader(credentials config.Credentials) fiber.Handler {
 
 		fileID := uuid.New()
 		filename := fileID.String()
-		S3Credentials := BuildAWSS3Config(credentials)
+		S3Credentials := BuildAWSS3Config(self.credentials)
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
 			//TODO: Log this error
@@ -78,9 +92,9 @@ func NewUploader(credentials config.Credentials) fiber.Handler {
 	}
 }
 
-func NewDownloader(credentials config.Credentials) fiber.Handler {
+func (self S3ProfileImageProvider) NewDownloader() fiber.Handler {
 	return func(context *fiber.Ctx) error {
-		S3Credentials := BuildAWSS3Config(credentials)
+		S3Credentials := BuildAWSS3Config(self.credentials)
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
 			return response.MakeErrorJSON(http.StatusInternalServerError, err.Error())
@@ -97,10 +111,10 @@ func NewDownloader(credentials config.Credentials) fiber.Handler {
 	}
 }
 
-func DeleteImage(credentials config.Credentials, userStore entities.UserRepository) fiber.Handler {
+func (self S3ProfileImageProvider) DeleteImage() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		email := context.Query(ADDRESS_KEY)
-		user, filename := getUser(email, context, userStore)
+		user, filename := self.getUser(email, context, self.userStore)
 		if user == nil {
 			return response.MakeErrorJSON(http.StatusNotFound, INVALID_USER_ERROR)
 		}
@@ -110,7 +124,7 @@ func DeleteImage(credentials config.Credentials, userStore entities.UserReposito
 			return context.Next()
 		}
 
-		S3Credentials := BuildAWSS3Config(credentials)
+		S3Credentials := BuildAWSS3Config(self.credentials)
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
 			return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
@@ -125,7 +139,7 @@ func DeleteImage(credentials config.Credentials, userStore entities.UserReposito
 	}
 }
 
-func UpdateImage(credentials config.Credentials, userStore entities.UserRepository) fiber.Handler {
+func (self S3ProfileImageProvider) UpdateImage() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		imageReader, err := getImageReader(context)
 		if err != nil {
@@ -135,7 +149,7 @@ func UpdateImage(credentials config.Credentials, userStore entities.UserReposito
 		}
 
 		email := context.FormValue(EMAIL_KEY, "")
-		user, filename := getUser(email, context, userStore)
+		user, filename := self.getUser(email, context, self.userStore)
 		if user == nil {
 			return response.MakeErrorJSON(http.StatusNotFound, INVALID_USER_ERROR)
 		}
@@ -145,7 +159,7 @@ func UpdateImage(credentials config.Credentials, userStore entities.UserReposito
 			filename = &randomID
 		}
 
-		S3Credentials := BuildAWSS3Config(credentials)
+		S3Credentials := BuildAWSS3Config(self.credentials)
 		session, err := BuildAWSSession(S3Credentials)
 		if err != nil {
 			//TODO: Log this error
@@ -250,8 +264,8 @@ func deleteProfileImage(session *session.Session, config AWSS3Config, objectID s
 	return err
 }
 
-func getUser(email string, context *fiber.Ctx, userStore entities.UserRepository) (*entities.User, *string) {
-	if !validator.IsValidEmailFormat(email) {
+func (self S3ProfileImageProvider) getUser(email string, context *fiber.Ctx, userStore entities.UserRepository) (*entities.User, *string) {
+	if !self.userValidator.IsValidEmailFormat(email) {
 		return nil, nil
 	}
 
