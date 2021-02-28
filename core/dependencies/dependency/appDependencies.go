@@ -2,7 +2,7 @@ package dependency
 
 import (
 	"user/app/utils/config"
-	"user/core/services"
+	"user/core/dependencies/services"
 )
 
 func NewServiceLocator(credentials *config.Credentials) (*services.App, error) {

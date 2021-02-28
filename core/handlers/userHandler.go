@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"user/app/utils/config"
 	"user/app/utils/response"
+	"user/core/dependencies/services"
 	"user/core/entities"
 	"user/core/middleware/amazons3"
-	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )

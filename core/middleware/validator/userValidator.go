@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"regexp"
 	"user/app/utils/response"
+	"user/core/dependencies/services"
 	"user/core/entities"
-	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )

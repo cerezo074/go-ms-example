@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 	"user/app/utils/response"
-	"user/core/dependency"
+	"user/core/dependencies/dependency"
+	"user/core/dependencies/services"
 	"user/core/routers"
-	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )

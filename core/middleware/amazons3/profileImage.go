@@ -7,8 +7,8 @@ import (
 	"strings"
 	"user/app/utils/config"
 	"user/app/utils/response"
+	"user/core/dependencies/services"
 	"user/core/entities"
-	"user/core/services"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"

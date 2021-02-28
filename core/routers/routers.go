@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"user/core/services"
+	"user/core/dependencies/services"
 
 	"github.com/gofiber/fiber/v2"
 )

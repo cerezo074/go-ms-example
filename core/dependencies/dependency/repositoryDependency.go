@@ -3,8 +3,8 @@ package dependency
 import (
 	"user/app/db/postgres"
 	"user/app/utils/config"
+	"user/core/dependencies/services"
 	"user/core/entities"
-	"user/core/services"
 )
 
 func NewRepository(credentials config.Credentials) (*services.RepositoryServices, error) {

@@ -1,8 +1,8 @@
 package dependency
 
 import (
+	"user/core/dependencies/services"
 	"user/core/middleware/validator"
-	"user/core/services"
 )
 
 func NewValidator(repository services.RepositoryServices) services.ValidatorServices {
