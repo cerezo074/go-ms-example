@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"errors"
 	"net/http"
 	"regexp"
 	"user/app/utils/response"
@@ -36,13 +37,50 @@ func (object UserValidatorProvider) DuplicatedUser() fiber.Handler {
 	}
 }
 
-func (provider UserValidatorProvider) IsValidEmailFormat(email string) bool {
+func (object UserValidatorProvider) IsValidEmailFormat(email string) bool {
 	if len(email) < 3 && len(email) > 254 {
 		return false
 	}
 
 	var emailRegex = regexp.MustCompile(EMAIL_REGEX_PATTERN)
 	return emailRegex.MatchString(email)
+}
+
+func (object UserValidatorProvider) IsValid(user entities.User) error {
+	errorMessage := ""
+	if user.ID.String() == "" {
+		errorMessage += "Invalid id, "
+	}
+
+	if user.Email == "" {
+		errorMessage += "Invalid email, "
+	}
+
+	if user.Nickname == "" {
+		errorMessage += "Invalid nickname, "
+	}
+
+	if user.Password == "" {
+		errorMessage += "Invalid password, "
+	}
+
+	if user.ImageID == "" {
+		errorMessage += "Invalid image id, "
+	}
+
+	if user.CountryCode == "" {
+		errorMessage += "Invalid country code, "
+	}
+
+	if user.Birthday == "" {
+		errorMessage += "Invalid birthday"
+	}
+
+	if errorMessage == "" {
+		return nil
+	}
+
+	return errors.New("There are some fields invalids: " + errorMessage)
 }
 
 func buildDuplicatedError(email string) error {

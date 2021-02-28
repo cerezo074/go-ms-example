@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,41 +33,4 @@ func (oldUser *User) Update(updatedUser User) {
 	oldUser.ImageID = updatedUser.ImageID
 	oldUser.CountryCode = updatedUser.CountryCode
 	oldUser.Birthday = updatedUser.Birthday
-}
-
-func (user User) IsValid() error {
-	errorMessage := ""
-	if user.ID.String() == "" {
-		errorMessage += "Invalid id, "
-	}
-
-	if user.Email == "" {
-		errorMessage += "Invalid email, "
-	}
-
-	if user.Nickname == "" {
-		errorMessage += "Invalid nickname, "
-	}
-
-	if user.Password == "" {
-		errorMessage += "Invalid password, "
-	}
-
-	if user.ImageID == "" {
-		errorMessage += "Invalid image id, "
-	}
-
-	if user.CountryCode == "" {
-		errorMessage += "Invalid country code, "
-	}
-
-	if user.Birthday == "" {
-		errorMessage += "Invalid birthday"
-	}
-
-	if errorMessage == "" {
-		return nil
-	}
-
-	return errors.New("There are some fields invalids: " + errorMessage)
 }

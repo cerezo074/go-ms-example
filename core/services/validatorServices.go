@@ -1,6 +1,10 @@
 package services
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"user/core/entities"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 type ValidatorServices struct {
 	UserValidator UserValidatorServices
@@ -9,4 +13,5 @@ type ValidatorServices struct {
 type UserValidatorServices interface {
 	DuplicatedUser() fiber.Handler
 	IsValidEmailFormat(email string) bool
+	IsValid(user entities.User) error
 }

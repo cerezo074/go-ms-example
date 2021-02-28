@@ -125,7 +125,7 @@ func (object userHandler) updateUser(context *fiber.Ctx) error {
 		updatedUser.ImageID = imagePath + amazons3.DEFAULT_IMAGE
 	}
 
-	if err := updatedUser.IsValid(); err != nil {
+	if err := object.userValidator().IsValid(*updatedUser); err != nil {
 		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
 	}
 
