@@ -1,9 +1,8 @@
 package routers
 
 import (
-	"user/app/utils/config"
-	"user/core/entities"
 	"user/core/handlers"
+	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,7 +16,7 @@ type userRoutes struct {
 }
 
 //Register insert user handlers into app
-func (router userRoutes) Register(app *fiber.App, repository entities.Repository, credentials config.Credentials) {
-	crudHandler := handlers.NewUserHandler(repository, credentials)
+func (router userRoutes) Register(app *fiber.App, appDependencies services.App) {
+	crudHandler := handlers.NewUserHandler(appDependencies)
 	crudHandler.RegisterMethods(app)
 }

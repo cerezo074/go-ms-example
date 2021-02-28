@@ -7,6 +7,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type UserRepository interface {
+	User(email string) (User, error)
+	Users() ([]User, error)
+	CreateUser(user *User) error
+	UpdateUser(user *User) error
+	DeleteUser(email string) error
+	ExistUser(email string) bool
+}
+
 type User struct {
 	ID          uuid.UUID `json:"id" db:"id"`
 	Email       string    `json:"email" form:"email" db:"email"`
@@ -62,17 +71,4 @@ func (user User) IsValid() error {
 	}
 
 	return errors.New("There are some fields invalids: " + errorMessage)
-}
-
-type UserRepository interface {
-	User(email string) (User, error)
-	Users() ([]User, error)
-	CreateUser(user *User) error
-	UpdateUser(user *User) error
-	DeleteUser(email string) error
-	ExistUser(email string) bool
-}
-
-type Repository interface {
-	UserRepository
 }

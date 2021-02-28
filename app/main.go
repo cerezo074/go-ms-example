@@ -2,58 +2,53 @@ package main
 
 import (
 	"log"
-	"user/app/db/postgres"
-	"user/app/utils/config"
 	"user/app/utils/response"
-	"user/core/entities"
+	"user/core/dependency"
 	"user/core/routers"
+	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-var (
-	appStore  entities.Repository
-	appConfig config.Credentials
-)
-
-func loadAppConfig() {
-	config, err := config.LoadCredentials(".")
-
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	appConfig = config
+type server struct {
+	app           *fiber.App
+	serverAddress string
 }
 
-func loadAppDB() {
-	store, err := postgres.NewStore(appConfig.DBSource, appConfig.DBDriver)
-
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	appStore = store
+func (object *server) start() {
+	log.Fatal(object.app.Listen(object.serverAddress))
 }
 
-func init() {
-	loadAppConfig()
-	loadAppDB()
-}
+func SetupApp(dependencies *services.App) (*server, error) {
+	appDependencies := dependencies
+	if appDependencies == nil {
+		defaultDependencies, err := dependency.NewServiceLocator(nil)
+		if err != nil {
+			return nil, err
+		}
 
-func main() {
-	if appStore == nil {
-		log.Fatal("Can not run web server before database server is up and ready")
-		return
+		appDependencies = defaultDependencies
 	}
 
-	appFiber := fiber.New(fiber.Config{
+	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: response.HandleJSONError,
 	})
 
 	userRouter := routers.NewUserRouter()
-	userRouter.Register(appFiber, appStore, appConfig)
-	log.Fatal(appFiber.Listen(appConfig.ServerAddress))
+	userRouter.Register(fiberApp, *appDependencies)
+
+	return &server{
+		app:           fiberApp,
+		serverAddress: appDependencies.Credentials.ServerAddress,
+	}, nil
+}
+
+func main() {
+	server, err := SetupApp(nil)
+	if err != nil {
+		log.Fatalf("Can't init app, %v", err)
+		return
+	}
+
+	server.start()
 }

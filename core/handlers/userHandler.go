@@ -7,14 +7,14 @@ import (
 	"user/app/utils/response"
 	"user/core/entities"
 	"user/core/middleware/amazons3"
-	"user/core/middleware/validator"
+	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 //NewUserHandler factory method for creating a method handler for users
-func NewUserHandler(repository entities.UserRepository, config config.Credentials) MethodHandlers {
-	return userHandler{store: repository, credentials: config}
+func NewUserHandler(depedencies services.App) MethodHandlers {
+	return userHandler{appDependencies: depedencies}
 }
 
 const (
@@ -22,8 +22,23 @@ const (
 )
 
 type userHandler struct {
-	store       entities.UserRepository
-	credentials config.Credentials
+	appDependencies services.App
+}
+
+func (object userHandler) userImage() services.S3ProfileImageServices {
+	return object.appDependencies.Image.UserProfileImage
+}
+
+func (object userHandler) userValidator() services.UserValidatorServices {
+	return object.appDependencies.Validator.UserValidator
+}
+
+func (object userHandler) appCredentials() config.Credentials {
+	return object.appDependencies.Credentials
+}
+
+func (object userHandler) userRepository() entities.UserRepository {
+	return object.appDependencies.Repository.UserRepository
 }
 
 type BasicUser struct {
@@ -31,17 +46,17 @@ type BasicUser struct {
 	Email string
 }
 
-func (handler userHandler) RegisterMethods(app *fiber.App) {
-	app.Get("/api/v1/users", handler.getUsers)
-	app.Get("/api/v1/users/email", handler.getUser)
-	app.Get(imagePath+":id", amazons3.NewDownloader(handler.credentials), handler.getImage)
-	app.Post("/api/v1/users", validator.DuplicatedUser(handler.store), amazons3.NewUploader(handler.credentials), handler.newUser)
-	app.Put("/api/v1/users", amazons3.UpdateImage(handler.credentials, handler.store), handler.updateUser)
-	app.Delete("/api/v1/users/email", amazons3.DeleteImage(handler.credentials, handler.store), handler.deleteUser)
+func (object userHandler) RegisterMethods(app *fiber.App) {
+	app.Get("/api/v1/users", object.getUsers)
+	app.Get("/api/v1/users/email", object.getUser)
+	app.Get(imagePath+":id", object.userImage().NewDownloader(), object.getImage)
+	app.Post("/api/v1/users", object.userValidator().DuplicatedUser(), object.userImage().NewUploader(), object.newUser)
+	app.Put("/api/v1/users", object.userImage().UpdateImage(), object.updateUser)
+	app.Delete("/api/v1/users/email", object.userImage().DeleteImage(), object.deleteUser)
 }
 
-func (handler userHandler) getUsers(context *fiber.Ctx) error {
-	users, err := handler.store.Users()
+func (object userHandler) getUsers(context *fiber.Ctx) error {
+	users, err := object.userRepository().Users()
 
 	if err != nil {
 		return response.MakeErrorJSON(http.StatusInternalServerError, err.Error())
@@ -54,14 +69,14 @@ func (handler userHandler) getUsers(context *fiber.Ctx) error {
 	return response.MakeSuccessJSON(users, context)
 }
 
-func (handler userHandler) getUser(context *fiber.Ctx) error {
+func (object userHandler) getUser(context *fiber.Ctx) error {
 	userEmail := context.Query("address")
 
 	if userEmail == "" {
 		return response.MakeErrorJSON(http.StatusBadRequest, "address is not present on url as a query param")
 	}
 
-	user, err := handler.store.User(userEmail)
+	user, err := object.userRepository().User(userEmail)
 
 	if err != nil {
 		return response.MakeErrorJSON(http.StatusNotFound, err.Error())
@@ -70,7 +85,7 @@ func (handler userHandler) getUser(context *fiber.Ctx) error {
 	return response.MakeSuccessJSON(user, context)
 }
 
-func (handler userHandler) getImage(context *fiber.Ctx) error {
+func (object userHandler) getImage(context *fiber.Ctx) error {
 	if s3DataFile, ok := context.Locals(amazons3.S3_DOWNLOADED_IMAGE_FILE).(*amazons3.AWSBufferedFile); ok {
 		return context.Status(http.StatusOK).SendStream(bytes.NewReader(s3DataFile.Data), int(s3DataFile.Size))
 	}
@@ -78,7 +93,7 @@ func (handler userHandler) getImage(context *fiber.Ctx) error {
 	return response.MakeErrorJSON(http.StatusInternalServerError, "Invalid type file")
 }
 
-func (handler userHandler) newUser(context *fiber.Ctx) error {
+func (object userHandler) newUser(context *fiber.Ctx) error {
 	user := new(entities.User)
 
 	if err := context.BodyParser(user); err != nil {
@@ -91,14 +106,14 @@ func (handler userHandler) newUser(context *fiber.Ctx) error {
 		user.ImageID = imagePath + amazons3.DEFAULT_IMAGE
 	}
 
-	if err := handler.store.CreateUser(user); err != nil {
+	if err := object.userRepository().CreateUser(user); err != nil {
 		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
 	}
 
 	return response.MakeSuccessJSON("user was created successfully", context)
 }
 
-func (handler userHandler) updateUser(context *fiber.Ctx) error {
+func (object userHandler) updateUser(context *fiber.Ctx) error {
 	updatedUser := new(entities.User)
 	if err := context.BodyParser(updatedUser); err != nil {
 		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
@@ -114,21 +129,21 @@ func (handler userHandler) updateUser(context *fiber.Ctx) error {
 		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
 	}
 
-	if err := handler.store.UpdateUser(updatedUser); err != nil {
+	if err := object.userRepository().UpdateUser(updatedUser); err != nil {
 		return response.MakeErrorJSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return response.MakeSuccessJSON("user updated successfully", context)
 }
 
-func (handler userHandler) deleteUser(context *fiber.Ctx) error {
+func (object userHandler) deleteUser(context *fiber.Ctx) error {
 	var user entities.User
 
 	if assertion, ok := context.Locals(amazons3.S3_USER_ENTITY).(entities.User); ok {
 		user = assertion
 	}
 
-	if err := handler.store.DeleteUser(user.Email); err != nil {
+	if err := object.userRepository().DeleteUser(user.Email); err != nil {
 		return response.MakeErrorJSON(http.StatusInternalServerError, "Invalid user")
 	}
 

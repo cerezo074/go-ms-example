@@ -1,13 +1,12 @@
 package routers
 
 import (
-	"user/app/utils/config"
-	"user/core/entities"
+	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 //RouteHandler declares an abstract interface for using with specific routers
 type RouteHandler interface {
-	Register(app *fiber.App, repository entities.Repository, credentials config.Credentials)
+	Register(app *fiber.App, appDependencies services.App)
 }

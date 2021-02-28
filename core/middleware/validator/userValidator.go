@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"user/app/utils/response"
 	"user/core/entities"
+	"user/core/services"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,25 +15,20 @@ const (
 	EMAIL_REGEX_PATTERN = "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 )
 
-type UserValidatorService interface {
-	DuplicatedUser() fiber.Handler
-	IsValidEmailFormat(email string) bool
-}
-
 type UserValidatorProvider struct {
-	UserValidatorService
-	userStore entities.UserRepository
+	services.UserValidatorServices
+	UserStore entities.UserRepository
 }
 
-func (self UserValidatorProvider) DuplicatedUser() fiber.Handler {
+func (object UserValidatorProvider) DuplicatedUser() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		email := context.FormValue(EMAIL_FIELD)
 
-		if !self.IsValidEmailFormat(email) {
+		if !object.IsValidEmailFormat(email) {
 			return buildInvalidFormatError(email)
 		}
 
-		if self.userStore.ExistUser(email) {
+		if object.UserStore.ExistUser(email) {
 			return buildDuplicatedError(email)
 		}
 
