@@ -2,50 +2,66 @@ package request
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
 
+	. "user/test/utils/models"
+
 	"github.com/gofiber/fiber/v2"
 )
 
-type UserResponse struct {
-	Data []User `json:"data"`
-}
-
-type User struct {
-	ID          string `json:"id"`
-	Email       string `json:"email"`
-	Nickname    string `json:"nickname"`
-	Password    string `json:"password"`
-	ImageID     string `json:"image_id"`
-	CountryCode string `json:"country_code"`
-	Birthday    string `json:"birthday"`
-	CreatedAt   string `json:"CreatedAt"`
-	UpdatedAt   string `json:"UpdatedAt"`
-}
+type ResponseUnmarshaller func(body []byte) (interface{}, error)
 
 type FakeServer struct {
-	FiberApp *fiber.App
+	FiberApp     *fiber.App
+	Unmarshaller ResponseUnmarshaller
 }
 
-func (object FakeServer) GetJSONObject(response *http.Response) (UserResponse, error) {
+func NewAllUsersUnmarshaller(body []byte) (interface{}, error) {
+	var response AllUsersResponse
+	err := json.Unmarshal(body, &response)
+	return response.Data, err
+}
+
+func NewFindUserUnmarshaller(body []byte) (interface{}, error) {
+	var response FindUserResponse
+	err := json.Unmarshal(body, &response)
+	return response.Data, err
+}
+
+func NewFailUnmarshaller(body []byte) (interface{}, error) {
+	var response FailResponse
+	err := json.Unmarshal(body, &response)
+	return response, err
+}
+
+func NewSuccessUnmarshaller(body []byte) (interface{}, error) {
+	var response SuccessResponse
+	err := json.Unmarshal(body, &response)
+	return response, err
+}
+
+func (object FakeServer) GetJSONObject(response *http.Response) (interface{}, error) {
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return UserResponse{}, err
+		return nil, err
 	}
 
-	var userResponse UserResponse
-	err = json.Unmarshal(body, &userResponse)
+	if object.Unmarshaller == nil {
+		return nil, errors.New("Invalid response marshaller")
+	}
+
+	data, err := object.Unmarshaller(body)
 	if err != nil {
-		return UserResponse{}, err
+		return nil, err
 	}
 
-	return userResponse, nil
+	return data, nil
 }
 
-func (object FakeServer) Execute(method string, path string, body io.Reader, dataKey string) (*http.Response, []User, error) {
+func (object FakeServer) Execute(method string, path string, body io.Reader) (*http.Response, interface{}, error) {
 	request, err := http.NewRequest(method, path, body)
 	if err != nil {
 		return nil, nil, err
@@ -56,14 +72,10 @@ func (object FakeServer) Execute(method string, path string, body io.Reader, dat
 		return nil, nil, err
 	}
 
-	userResponse, err := object.GetJSONObject(response)
+	responseData, err := object.GetJSONObject(response)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if len(dataKey) > 0 && dataKey != " " {
-		return response, userResponse.Data, nil
-	}
-
-	return nil, nil, fmt.Errorf("Invalid JSONSlice in object, %v", userResponse)
+	return response, responseData, nil
 }

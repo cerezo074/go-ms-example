@@ -3,8 +3,8 @@ package mocks
 import . "user/core/entities"
 
 type FakeRepo struct {
-	UserByEmail func(string) (User, error)
 	AllUsers    func() ([]User, error)
+	UserByEmail func(string) (User, error)
 	Save        func(*User) error
 	Update      func(*User) error
 	Delete      func(string) error
