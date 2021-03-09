@@ -13,11 +13,13 @@ func (object FakeImage) NewUploader() fiber.Handler {
 		return context.Next()
 	}
 }
+
 func (object FakeImage) NewDownloader() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		return context.Next()
 	}
 }
+
 func (object FakeImage) DeleteImage() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		if object.Delete == nil {
@@ -27,6 +29,7 @@ func (object FakeImage) DeleteImage() fiber.Handler {
 		return object.Delete(context)
 	}
 }
+
 func (object FakeImage) UpdateImage() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		return context.Next()

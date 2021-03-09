@@ -7,7 +7,7 @@ import (
 	"user/core/entities"
 )
 
-func NewUserMockedServices(userRepository entities.UserRepository, userValidator UserValidatorServices, userImage S3ProfileImageServices) services.App {
+func NewUserMockedServices(userRepository entities.UserRepository, userValidator UserValidatorServices, userImage ProfileImageServices) services.App {
 	fakeConfig := config.Credentials{}
 
 	fakeRepo := RepositoryServices{

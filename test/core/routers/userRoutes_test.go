@@ -6,7 +6,7 @@ import (
 	"testing"
 	"user/app/utils/response"
 	. "user/core/entities"
-	"user/core/middleware/amazons3"
+	image "user/core/middleware/image"
 	"user/core/routers"
 	utils "user/test/utils/http"
 	. "user/test/utils/mocks"
@@ -63,13 +63,13 @@ var (
 	}
 	deleteUserImage = FakeImage{
 		Delete: func(context *fiber.Ctx) error {
-			context.Locals(amazons3.S3_USER_ENTITY, user1)
+			context.Locals(image.PROFILE_IMAGE_USER_ENTITY, user1)
 			return context.Next()
 		},
 	}
 	deleteInvalidUserImage = FakeImage{
 		Delete: func(context *fiber.Ctx) error {
-			context.Locals(amazons3.S3_USER_ENTITY, User{})
+			context.Locals(image.PROFILE_IMAGE_USER_ENTITY, User{})
 			return context.Next()
 		},
 	}

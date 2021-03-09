@@ -7,7 +7,7 @@ import (
 	"user/app/utils/response"
 	"user/core/dependencies/services"
 	"user/core/entities"
-	"user/core/middleware/amazons3"
+	image "user/core/middleware/image"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,7 +25,7 @@ type userHandler struct {
 	appDependencies services.App
 }
 
-func (object userHandler) userImage() services.S3ProfileImageServices {
+func (object userHandler) userImage() services.ProfileImageServices {
 	return object.appDependencies.Image.UserProfileImage
 }
 
@@ -86,7 +86,7 @@ func (object userHandler) getUser(context *fiber.Ctx) error {
 }
 
 func (object userHandler) getImage(context *fiber.Ctx) error {
-	if s3DataFile, ok := context.Locals(amazons3.S3_DOWNLOADED_IMAGE_FILE).(*amazons3.AWSBufferedFile); ok {
+	if s3DataFile, ok := context.Locals(image.PROFILE_IMAGE_DOWNLOADED_FILE).(*image.ImageBufferedFile); ok {
 		return context.Status(http.StatusOK).SendStream(bytes.NewReader(s3DataFile.Data), int(s3DataFile.Size))
 	}
 
@@ -100,10 +100,10 @@ func (object userHandler) newUser(context *fiber.Ctx) error {
 		return response.MakeErrorJSON(http.StatusNotFound, err.Error())
 	}
 
-	if imageURI, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_ID).(string); ok {
+	if imageURI, ok := context.Locals(image.PROFILE_IMAGE__UPLOADED_ID).(string); ok {
 		user.ImageID = imagePath + imageURI
 	} else {
-		user.ImageID = imagePath + amazons3.DEFAULT_IMAGE
+		user.ImageID = imagePath + image.DEFAULT_IMAGE
 	}
 
 	if err := object.userRepository().CreateUser(user); err != nil {
@@ -119,10 +119,10 @@ func (object userHandler) updateUser(context *fiber.Ctx) error {
 		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
 	}
 
-	if imageID, ok := context.Locals(amazons3.S3_UPLOADED_IMAGE_ID).(string); ok {
+	if imageID, ok := context.Locals(image.PROFILE_IMAGE__UPLOADED_ID).(string); ok {
 		updatedUser.ImageID = imagePath + imageID
 	} else {
-		updatedUser.ImageID = imagePath + amazons3.DEFAULT_IMAGE
+		updatedUser.ImageID = imagePath + image.DEFAULT_IMAGE
 	}
 
 	if err := object.userValidator().IsValid(*updatedUser); err != nil {
@@ -139,7 +139,7 @@ func (object userHandler) updateUser(context *fiber.Ctx) error {
 func (object userHandler) deleteUser(context *fiber.Ctx) error {
 	var user entities.User
 
-	if assertion, ok := context.Locals(amazons3.S3_USER_ENTITY).(entities.User); ok {
+	if assertion, ok := context.Locals(image.PROFILE_IMAGE_USER_ENTITY).(entities.User); ok {
 		user = assertion
 	}
 

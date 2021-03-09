@@ -66,7 +66,6 @@ func (object FakeServer) Execute(method string, path string, body io.Reader) (*h
 	if err != nil {
 		return nil, nil, err
 	}
-
 	response, err := object.FiberApp.Test(request, -1)
 	if err != nil {
 		return nil, nil, err

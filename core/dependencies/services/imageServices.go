@@ -3,10 +3,10 @@ package services
 import "github.com/gofiber/fiber/v2"
 
 type ImageServices struct {
-	UserProfileImage S3ProfileImageServices
+	UserProfileImage ProfileImageServices
 }
 
-type S3ProfileImageServices interface {
+type ProfileImageServices interface {
 	NewUploader() fiber.Handler
 	NewDownloader() fiber.Handler
 	DeleteImage() fiber.Handler
