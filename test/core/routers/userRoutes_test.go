@@ -84,7 +84,7 @@ func buildServer(unmarshaller utils.ResponseUnmarshaller) *utils.FakeServer {
 	}
 }
 
-func Test_ShouldGetUsers_WhenExistInRepository(t *testing.T) {
+func Test_GetUsers_WhenTheyExistInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewAllUsersUnmarshaller)
 	fakeRepo := allUsersRepo
@@ -101,7 +101,7 @@ func Test_ShouldGetUsers_WhenExistInRepository(t *testing.T) {
 	assert.EqualValuesf(t, userSlice[1].Email, "user2@gmail.com", "Invalid email for user2")
 }
 
-func Test_ShouldntGetUsers_WhenRepositoryIsEmpty(t *testing.T) {
+func Test_ShouldntGetUsers_WhenTheyDontExistInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewAllUsersUnmarshaller)
 	appServices := NewUserMockedServices(FakeRepo{}, FakeValidator{}, FakeImage{})
@@ -115,7 +115,7 @@ func Test_ShouldntGetUsers_WhenRepositoryIsEmpty(t *testing.T) {
 	assert.Lenf(t, userSlice, 0, "Invalid length for users, must be 0")
 }
 
-func Test_ShouldGetUserByEmail_WhenExistInRepository(t *testing.T) {
+func Test_GetUserByEmail_WhenItExistsInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewFindUserUnmarshaller)
 	fakeRepo := findUserRepo
@@ -131,7 +131,7 @@ func Test_ShouldGetUserByEmail_WhenExistInRepository(t *testing.T) {
 	assert.EqualValuesf(t, user.Nickname, "CR7", "Invalid nickname for user1")
 }
 
-func Test_ShouldntGetUserByEmail_WhenUserDoesntExist(t *testing.T) {
+func Test_ShouldntGetUserByEmail_WhenItDoesntExist(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewFailUnmarshaller)
 	fakeRepo := findUserRepo
@@ -147,7 +147,7 @@ func Test_ShouldntGetUserByEmail_WhenUserDoesntExist(t *testing.T) {
 	assert.EqualValuesf(t, failResponse.Error, fmt.Sprintf("User doesn't exist with %v email", invalidEmail), "Invalid error message")
 }
 
-func Test_DeleteUserByEmail_WhenExistInRepository(t *testing.T) {
+func Test_DeleteUserByEmail_WhenItExistsInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewSuccessUnmarshaller)
 	fakeRepo := deleteUserRepo
@@ -163,7 +163,7 @@ func Test_DeleteUserByEmail_WhenExistInRepository(t *testing.T) {
 	assert.EqualValuesf(t, successResponse.Data, "user deleted successfully", "Invalid error message")
 }
 
-func Test_DeleteUserByEmail_WhenUserDoesntExist(t *testing.T) {
+func Test_ShouldntDeleteUserByEmail_WhenItDoesntExist(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewFailUnmarshaller)
 	fakeRepo := deleteUserRepo
