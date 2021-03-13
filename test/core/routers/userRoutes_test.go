@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -44,6 +45,22 @@ var (
 		AllUsers: func() ([]User, error) {
 			return users, nil
 		},
+		Exist: func(email string) bool {
+			for _, user := range users {
+				if user.Email == email {
+					return true
+				}
+			}
+
+			return false
+		},
+		Save: func(newUser *User) error {
+			if newUser == nil {
+				return errors.New("Invalid new user to be saved, nil reference")
+			}
+
+			return nil
+		},
 	}
 	findUserRepo = FakeRepo{
 		UserByEmail: func(email string) (User, error) {
@@ -61,13 +78,13 @@ var (
 			return fmt.Errorf("User doesn't exist with %v email", email)
 		},
 	}
-	deleteUserImage = FakeImage{
+	deleteUserImage = FakeProfileImage{
 		Delete: func(context *fiber.Ctx) error {
 			context.Locals(image.PROFILE_IMAGE_USER_ENTITY, user1)
 			return context.Next()
 		},
 	}
-	deleteInvalidUserImage = FakeImage{
+	deleteInvalidUserImage = FakeProfileImage{
 		Delete: func(context *fiber.Ctx) error {
 			context.Locals(image.PROFILE_IMAGE_USER_ENTITY, User{})
 			return context.Next()
@@ -88,10 +105,10 @@ func Test_GetUsers_WhenTheyExistInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewAllUsersUnmarshaller)
 	fakeRepo := allUsersRepo
-	appServices := NewUserMockedServices(fakeRepo, FakeValidator{}, FakeImage{})
+	appServices := NewUserMockedServices(fakeRepo, FakeValidator{}, FakeProfileImage{})
 
 	routers.NewUserRouter().Register(server.FiberApp, appServices)
-	response, object, _ := server.Execute("GET", "/api/v1/users", nil)
+	response, object, _ := server.Execute("GET", "/api/v1/users", nil, nil)
 	userSlice, ok := object.([]models.User)
 
 	assert.Truef(t, ok, "Invalid type marshalled from response")
@@ -104,10 +121,10 @@ func Test_GetUsers_WhenTheyExistInRepository(t *testing.T) {
 func Test_ShouldntGetUsers_WhenTheyDontExistInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewAllUsersUnmarshaller)
-	appServices := NewUserMockedServices(FakeRepo{}, FakeValidator{}, FakeImage{})
+	appServices := NewUserMockedServices(FakeRepo{}, FakeValidator{}, FakeProfileImage{})
 
 	routers.NewUserRouter().Register(server.FiberApp, appServices)
-	response, object, _ := server.Execute("GET", "/api/v1/users", nil)
+	response, object, _ := server.Execute("GET", "/api/v1/users", nil, nil)
 	userSlice, ok := object.([]models.User)
 
 	assert.Truef(t, ok, fmt.Sprintf("Invalid type marshalled %t from response body, expected []User type", object))
@@ -119,10 +136,10 @@ func Test_GetUserByEmail_WhenItExistsInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewFindUserUnmarshaller)
 	fakeRepo := findUserRepo
-	appServices := NewUserMockedServices(fakeRepo, FakeValidator{}, FakeImage{})
+	appServices := NewUserMockedServices(fakeRepo, FakeValidator{}, FakeProfileImage{})
 
 	routers.NewUserRouter().Register(server.FiberApp, appServices)
-	response, object, _ := server.Execute("GET", "/api/v1/users/email?address="+user1.Email, nil)
+	response, object, _ := server.Execute("GET", "/api/v1/users/email?address="+user1.Email, nil, nil)
 	user, ok := object.(models.User)
 
 	assert.Truef(t, ok, fmt.Sprintf("Invalid type marshalled %t from response body, expected User type", object))
@@ -131,15 +148,15 @@ func Test_GetUserByEmail_WhenItExistsInRepository(t *testing.T) {
 	assert.EqualValuesf(t, user.Nickname, "CR7", "Invalid nickname for user1")
 }
 
-func Test_ShouldntGetUserByEmail_WhenItDoesntExist(t *testing.T) {
+func Test_ShouldntGetUserByEmail_WhenItDoesntExistInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewFailUnmarshaller)
 	fakeRepo := findUserRepo
-	appServices := NewUserMockedServices(fakeRepo, FakeValidator{}, FakeImage{})
+	appServices := NewUserMockedServices(fakeRepo, FakeValidator{}, FakeProfileImage{})
 	invalidEmail := "invaliduser@test.com"
 
 	routers.NewUserRouter().Register(server.FiberApp, appServices)
-	response, object, _ := server.Execute("GET", "/api/v1/users/email?address="+invalidEmail, nil)
+	response, object, _ := server.Execute("GET", "/api/v1/users/email?address="+invalidEmail, nil, nil)
 	failResponse, ok := object.(models.FailResponse)
 
 	assert.Truef(t, ok, fmt.Sprintf("Invalid type marshalled %t from response body, expected FailResponse type", object))
@@ -155,7 +172,7 @@ func Test_DeleteUserByEmail_WhenItExistsInRepository(t *testing.T) {
 	appServices := NewUserMockedServices(fakeRepo, FakeValidator{}, fakeImage)
 
 	routers.NewUserRouter().Register(server.FiberApp, appServices)
-	response, object, _ := server.Execute("DELETE", "/api/v1/users/email?address="+user1.Email, nil)
+	response, object, _ := server.Execute("DELETE", "/api/v1/users/email?address="+user1.Email, nil, nil)
 	successResponse, ok := object.(models.SuccessResponse)
 
 	assert.Truef(t, ok, fmt.Sprintf("Invalid type marshalled %t from response body, expected SuccessResponse type", object))
@@ -163,7 +180,7 @@ func Test_DeleteUserByEmail_WhenItExistsInRepository(t *testing.T) {
 	assert.EqualValuesf(t, successResponse.Data, "user deleted successfully", "Invalid error message")
 }
 
-func Test_ShouldntDeleteUserByEmail_WhenItDoesntExist(t *testing.T) {
+func Test_ShouldntDeleteUserByEmail_WhenItDoesntExistInRepository(t *testing.T) {
 	t.Parallel()
 	server := buildServer(utils.NewFailUnmarshaller)
 	fakeRepo := deleteUserRepo
@@ -172,7 +189,7 @@ func Test_ShouldntDeleteUserByEmail_WhenItDoesntExist(t *testing.T) {
 	invalidEmail := "invaliduser@test.com"
 
 	routers.NewUserRouter().Register(server.FiberApp, appServices)
-	response, object, _ := server.Execute("DELETE", "/api/v1/users/email?address="+invalidEmail, nil)
+	response, object, _ := server.Execute("DELETE", "/api/v1/users/email?address="+invalidEmail, nil, nil)
 	failResponse, ok := object.(models.FailResponse)
 
 	assert.Truef(t, ok, fmt.Sprintf("Invalid type marshalled %t from response body, expected SuccessResponse type", object))
@@ -184,9 +201,10 @@ func Test_ShouldntDeleteUserByEmail_WhenItDoesntExist(t *testing.T) {
 	app.Get("/api/v1/users", object.getUsers) // DONE
 	app.Get("/api/v1/users/email", object.getUser) // DONE
 	app.Get(imagePath+":id", object.userImage().NewDownloader(), object.getImage)
-	app.Post("/api/v1/users", object.userValidator().DuplicatedUser(), object.userImage().NewUploader(), object.newUser)
+	app.Post("/api/v1/users", object.userValidator().DuplicatedUser(), object.userImage().NewUploader(), object.newUser) // DONE
 	app.Put("/api/v1/users", object.userImage().UpdateImage(), object.updateUser)
 	app.Delete("/api/v1/users/email", object.userImage().DeleteImage(), object.deleteUser) //DONE
 
 	https://stackoverflow.com/questions/43904974/testing-go-http-request-formfile
+	https://stackoverflow.com/questions/7223616/http-post-file-multipart
 */

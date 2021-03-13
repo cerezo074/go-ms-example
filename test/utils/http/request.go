@@ -61,11 +61,21 @@ func (object FakeServer) GetJSONObject(response *http.Response) (interface{}, er
 	return data, nil
 }
 
-func (object FakeServer) Execute(method string, path string, body io.Reader) (*http.Response, interface{}, error) {
+func (object FakeServer) Execute(method string, path string, headers http.Header, body io.Reader) (*http.Response, interface{}, error) {
+
 	request, err := http.NewRequest(method, path, body)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	if headers != nil {
+		for key, value := range headers {
+			if len(value) == 1 {
+				request.Header.Add(key, value[0])
+			}
+		}
+	}
+
 	response, err := object.FiberApp.Test(request, -1)
 	if err != nil {
 		return nil, nil, err

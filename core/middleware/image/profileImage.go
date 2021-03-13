@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -21,46 +20,12 @@ const (
 	PROFILE_IMAGE_DOWNLOADED_FILE = "image_file"
 )
 
-type LoaderType int
-
-const (
-	AWSS3 LoaderType = iota
-)
-
-type ImageStorageLoader interface {
-	Load(credentials config.Credentials) (ImageStorageSession, error)
-}
-
-type ImageStorageSession interface {
-	Upload(imageReader io.Reader, filename string) (string, error)
-	Download(imageIDParam string) (*ImageBufferedFile, error)
-	Delete(objectID string) error
-}
-
-type ImageStorageBuilder struct {
-	LoaderType LoaderType
-}
-
-type ImageBufferedFile struct {
-	Data []byte
-	Size int64
-}
-
-func (object ImageStorageBuilder) Load(credentials config.Credentials) (ImageStorageSession, error) {
-	switch object.LoaderType {
-	case AWSS3:
-		return NewS3StorageSession(credentials)
-	default:
-		return nil, fmt.Errorf("Invalid image loader type for value %v, ", object.LoaderType)
-	}
-}
-
 type ProfileImageProvider struct {
 	services.ProfileImageServices
 	UserStore     entities.UserRepository
 	UserValidator services.UserValidatorServices
 	Credentials   config.Credentials
-	Loader        ImageStorageLoader
+	Loader        services.ImageStorageLoader
 }
 
 func (object ProfileImageProvider) NewUploader() fiber.Handler {

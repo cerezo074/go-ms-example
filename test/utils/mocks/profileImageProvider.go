@@ -4,23 +4,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type FakeImage struct {
+type FakeProfileImage struct {
 	Delete func(*fiber.Ctx) error
 }
 
-func (object FakeImage) NewUploader() fiber.Handler {
+func (object FakeProfileImage) NewUploader() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		return context.Next()
 	}
 }
 
-func (object FakeImage) NewDownloader() fiber.Handler {
+func (object FakeProfileImage) NewDownloader() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		return context.Next()
 	}
 }
 
-func (object FakeImage) DeleteImage() fiber.Handler {
+func (object FakeProfileImage) DeleteImage() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		if object.Delete == nil {
 			return context.Next()
@@ -30,7 +30,7 @@ func (object FakeImage) DeleteImage() fiber.Handler {
 	}
 }
 
-func (object FakeImage) UpdateImage() fiber.Handler {
+func (object FakeProfileImage) UpdateImage() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		return context.Next()
 	}

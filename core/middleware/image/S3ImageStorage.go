@@ -7,6 +7,7 @@ import (
 	"strings"
 	"user/app/utils/config"
 	"user/app/utils/response"
+	"user/core/dependencies/services"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -45,7 +46,7 @@ func NewAWSS3Session(config AWSS3Config) (*session.Session, error) {
 	})
 }
 
-func NewS3StorageSession(credentials config.Credentials) (ImageStorageSession, error) {
+func NewS3StorageSession(credentials config.Credentials) (services.ImageStorageSession, error) {
 	config := NewAWSS3Config(credentials)
 	AWSSession, err := NewAWSS3Session(config)
 	if err != nil {
@@ -88,7 +89,7 @@ func (object S3StorageSession) Upload(imageReader io.Reader, filename string) (s
 	return (buildS3ImageURI(filename, config.S3BucketName)), nil
 }
 
-func (object S3StorageSession) Download(imageIDParam string) (*ImageBufferedFile, error) {
+func (object S3StorageSession) Download(imageIDParam string) (*services.ImageBufferedFile, error) {
 	imageID := strings.ReplaceAll(imageIDParam, " ", "")
 	if len(imageID) <= 0 {
 		imageID = DEFAULT_IMAGE
@@ -108,7 +109,7 @@ func (object S3StorageSession) Download(imageIDParam string) (*ImageBufferedFile
 
 	data := myFile.Bytes()
 
-	return &ImageBufferedFile{Data: data, Size: bytesDownloaded}, nil
+	return &services.ImageBufferedFile{Data: data, Size: bytesDownloaded}, nil
 }
 
 func (object S3StorageSession) Delete(objectID string) error {

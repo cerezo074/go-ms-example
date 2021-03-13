@@ -86,7 +86,7 @@ func (object userHandler) getUser(context *fiber.Ctx) error {
 }
 
 func (object userHandler) getImage(context *fiber.Ctx) error {
-	if s3DataFile, ok := context.Locals(image.PROFILE_IMAGE_DOWNLOADED_FILE).(*image.ImageBufferedFile); ok {
+	if s3DataFile, ok := context.Locals(image.PROFILE_IMAGE_DOWNLOADED_FILE).(*services.ImageBufferedFile); ok {
 		return context.Status(http.StatusOK).SendStream(bytes.NewReader(s3DataFile.Data), int(s3DataFile.Size))
 	}
 

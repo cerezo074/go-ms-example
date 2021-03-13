@@ -5,6 +5,7 @@ import (
 	"user/core/dependencies/services"
 	. "user/core/dependencies/services"
 	"user/core/entities"
+	"user/core/middleware/image"
 )
 
 func NewUserMockedServices(userRepository entities.UserRepository, userValidator UserValidatorServices, userImage ProfileImageServices) services.App {
@@ -27,5 +28,17 @@ func NewUserMockedServices(userRepository entities.UserRepository, userValidator
 		Repository:  fakeRepo,
 		Validator:   fakeValidor,
 		Image:       fakeImage,
+	}
+}
+
+func NewImageProvider(userRepository entities.UserRepository,
+	userValidator UserValidatorServices,
+	imageLoder ImageStorageLoader) image.ProfileImageProvider {
+
+	return image.ProfileImageProvider{
+		Credentials:   fakeCredentias,
+		UserStore:     userRepository,
+		UserValidator: userValidator,
+		Loader:        imageLoder,
 	}
 }

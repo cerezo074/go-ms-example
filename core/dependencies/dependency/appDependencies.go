@@ -3,7 +3,6 @@ package dependency
 import (
 	"user/app/utils/config"
 	"user/core/dependencies/services"
-	"user/core/middleware/image"
 )
 
 func NewServiceLocator(credentials *config.Credentials) (*services.App, error) {
@@ -23,7 +22,7 @@ func NewServiceLocator(credentials *config.Credentials) (*services.App, error) {
 	}
 
 	appValidator := NewValidator(*appRepository)
-	appImages := NewImageProvider(*appRepository, appValidator, *appCredentials, image.AWSS3)
+	appImages := NewImageProvider(*appRepository, appValidator, *appCredentials, AWSS3)
 
 	return &services.App{
 		Credentials: *appCredentials,
