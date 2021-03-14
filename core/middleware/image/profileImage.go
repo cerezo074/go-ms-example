@@ -150,7 +150,7 @@ func (object ProfileImageProvider) getUser(email string, context *fiber.Ctx, use
 	}
 
 	user, err := userStore.User(email)
-	if err != nil {
+	if err != nil || user.Email == "" {
 		return nil, nil
 	}
 
