@@ -90,7 +90,7 @@ var (
 		UserByEmail: searchAllUsersByEmail,
 		Update:      updateShisioUserOnRepo,
 	}
-	updateShishioImageOnStorage = FakeImageLoader{
+	updateShishioImageStorage = FakeImageLoader{
 		UploadImage: func(image io.Reader, filename string) (string, error) {
 			areFilesEquals, err := utils.FilesMatch(image, *shishioImageUpdated.ImagePath)
 			if err != nil || !areFilesEquals {
@@ -119,17 +119,17 @@ var _ = Describe("Update User", func() {
 			BeforeEach(func() {
 				requestBody, contentTypeValue, _ = utils.MultipartFormBody(shishioImageUpdated)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-				server = buildServer(utils.NewSuccessUnmarshaller)
+				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
 					UserStore: updateShishioRepo,
 				}
-				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageOnStorage)
+				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageStorage)
 				appServices = NewUserMockedServices(updateShishioRepo, fakeValidator, fakeImageProvider)
 			})
 
 			It("Should get user crated message successfully", func() {
 				routers.NewUserRouter().Register(server.FiberApp, appServices)
-				response, object, _ := server.Execute("PUT", "/api/v1/users", requestHeaders, requestBody)
+				response, object, _ := server.Execute("PUT", "/api/v1/users", false, requestHeaders, requestBody)
 				jsonResponse, ok := object.(models.SuccessResponse)
 				Expect(ok).To(Equal(true))
 				Expect(response.StatusCode).To(Equal(http.StatusOK))
@@ -141,17 +141,17 @@ var _ = Describe("Update User", func() {
 			BeforeEach(func() {
 				requestBody, contentTypeValue, _ = utils.MultipartFormBody(invalidUpdatedUser)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-				server = buildServer(utils.NewFailUnmarshaller)
+				server = utils.NewServer(utils.NewFailUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
 					UserStore: updateShishioRepo,
 				}
-				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageOnStorage)
+				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageStorage)
 				appServices = NewUserMockedServices(updateShishioRepo, fakeValidator, fakeImageProvider)
 			})
 
 			It("Should get error message when attempt to create user crated message successfully", func() {
 				routers.NewUserRouter().Register(server.FiberApp, appServices)
-				response, object, _ := server.Execute("PUT", "/api/v1/users", requestHeaders, requestBody)
+				response, object, _ := server.Execute("PUT", "/api/v1/users", false, requestHeaders, requestBody)
 				jsonResponse, ok := object.(models.FailResponse)
 				Expect(ok).To(Equal(true))
 				Expect(response.StatusCode).To(Equal(http.StatusNotFound))
@@ -165,17 +165,17 @@ var _ = Describe("Update User", func() {
 			BeforeEach(func() {
 				requestBody, contentTypeValue, _ = utils.MultipartFormBody(shishioWithoutImage)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-				server = buildServer(utils.NewSuccessUnmarshaller)
+				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
 					UserStore: updateShishioRepo,
 				}
-				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageOnStorage)
+				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageStorage)
 				appServices = NewUserMockedServices(updateShishioRepo, fakeValidator, fakeImageProvider)
 			})
 
 			It("Should get user updated message successfully", func() {
 				routers.NewUserRouter().Register(server.FiberApp, appServices)
-				response, object, _ := server.Execute("PUT", "/api/v1/users", requestHeaders, requestBody)
+				response, object, _ := server.Execute("PUT", "/api/v1/users", false, requestHeaders, requestBody)
 				jsonResponse, ok := object.(models.SuccessResponse)
 				Expect(ok).To(Equal(true))
 				Expect(response.StatusCode).To(Equal(http.StatusOK))

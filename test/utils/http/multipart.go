@@ -1,4 +1,4 @@
-package request
+package http
 
 import (
 	"bytes"
@@ -25,13 +25,25 @@ func (object UserForm) imageName() string {
 	return filename
 }
 
+func GetFile(filePath string) (*bytes.Buffer, int64, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, -1, err
+	}
+
+	defer file.Close()
+	buffer := bytes.NewBuffer([]byte{})
+	copiedBytes, err := io.Copy(buffer, file)
+	return buffer, copiedBytes, nil
+}
+
 func FilesMatch(rawFile io.Reader, rigthFilePath string) (bool, error) {
-	rawImage, err := os.Open(rigthFilePath)
+	secondRawFile, err := os.Open(rigthFilePath)
 	if err != nil {
 		return false, err
 	}
 
-	fileInfo, err := rawImage.Stat()
+	fileInfo, err := secondRawFile.Stat()
 	if err != nil {
 		return false, err
 	}

@@ -8,13 +8,14 @@ import (
 	"testing"
 
 	"user/core/dependencies/services"
-	"user/core/entities"
+	. "user/core/entities"
 	"user/core/middleware/validator"
 	"user/core/routers"
 	utils "user/test/utils/http"
 	. "user/test/utils/mocks"
 	"user/test/utils/models"
 
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -22,7 +23,29 @@ import (
 var (
 	elpibeImagePath = "../../utils/assets/elpibe.jpg"
 	repeatedEmail   = "user1@gmail.com"
-	repitedUser     = utils.UserForm{
+	user4           = User{
+		ID:          uuid.New(),
+		Email:       "user1@gmail.com",
+		Nickname:    "CR7",
+		Password:    "123456",
+		ImageID:     "profile1.png",
+		CountryCode: "USA",
+		Birthday:    "07/01/2000",
+	}
+	user5 = User{
+		ID:          uuid.New(),
+		Email:       "user2@gmail.com",
+		Nickname:    "Messi",
+		Password:    "654321",
+		ImageID:     "profile2.png",
+		CountryCode: "USA",
+		Birthday:    "08/01/2000",
+	}
+	savedUsers = []User{
+		user4,
+		user5,
+	}
+	repitedUser = utils.UserForm{
 		Email:       repeatedEmail,
 		Nickname:    "El Pibe'",
 		Password:    "123456",
@@ -47,11 +70,11 @@ var (
 		Birthday:    "12/22/2020",
 	}
 	elPibesNewUserRepo = FakeRepo{
-		AllUsers: func() ([]entities.User, error) {
-			return users, nil
+		AllUsers: func() ([]User, error) {
+			return savedUsers, nil
 		},
 		Exist: func(email string) bool {
-			for _, user := range users {
+			for _, user := range savedUsers {
 				if user.Email == email {
 					return true
 				}
@@ -59,7 +82,7 @@ var (
 
 			return false
 		},
-		Save: func(newUser *entities.User) error {
+		Save: func(newUser *User) error {
 			if newUser == nil {
 				return errors.New("Invalid new user to be saved, nil reference")
 			}
@@ -100,7 +123,7 @@ var _ = Describe("Sign up User", func() {
 			BeforeEach(func() {
 				requestBody, contentTypeValue, _ = utils.MultipartFormBody(elPibe)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-				server = buildServer(utils.NewSuccessUnmarshaller)
+				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
 					UserStore: elPibesNewUserRepo,
 				}
@@ -110,7 +133,7 @@ var _ = Describe("Sign up User", func() {
 
 			It("Should get user crated message successfully", func() {
 				routers.NewUserRouter().Register(server.FiberApp, appServices)
-				response, object, _ := server.Execute("POST", "/api/v1/users", requestHeaders, requestBody)
+				response, object, _ := server.Execute("POST", "/api/v1/users", false, requestHeaders, requestBody)
 				jsonResponse, ok := object.(models.SuccessResponse)
 				Expect(ok).To(Equal(true))
 				Expect(response.StatusCode).To(Equal(http.StatusOK))
@@ -122,7 +145,7 @@ var _ = Describe("Sign up User", func() {
 			BeforeEach(func() {
 				requestBody, contentTypeValue, _ = utils.MultipartFormBody(repitedUser)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-				server = buildServer(utils.NewFailUnmarshaller)
+				server = utils.NewServer(utils.NewFailUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
 					UserStore: elPibesNewUserRepo,
 				}
@@ -132,7 +155,7 @@ var _ = Describe("Sign up User", func() {
 
 			It("Shouldn't get user crated message successfully", func() {
 				routers.NewUserRouter().Register(server.FiberApp, appServices)
-				response, object, _ := server.Execute("POST", "/api/v1/users", requestHeaders, requestBody)
+				response, object, _ := server.Execute("POST", "/api/v1/users", false, requestHeaders, requestBody)
 				jsonResponse, ok := object.(models.FailResponse)
 				Expect(ok).To(Equal(true))
 				Expect(response.StatusCode).To(Equal(http.StatusConflict))
@@ -146,7 +169,7 @@ var _ = Describe("Sign up User", func() {
 			BeforeEach(func() {
 				requestBody, contentTypeValue, _ = utils.MultipartFormBody(elPibeWithoutImage)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-				server = buildServer(utils.NewSuccessUnmarshaller)
+				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
 					UserStore: elPibesNewUserRepo,
 				}
@@ -156,7 +179,7 @@ var _ = Describe("Sign up User", func() {
 
 			It("Should get user crated message successfully", func() {
 				routers.NewUserRouter().Register(server.FiberApp, appServices)
-				response, object, _ := server.Execute("POST", "/api/v1/users", requestHeaders, requestBody)
+				response, object, _ := server.Execute("POST", "/api/v1/users", false, requestHeaders, requestBody)
 				jsonResponse, ok := object.(models.SuccessResponse)
 				Expect(ok).To(Equal(true))
 				Expect(response.StatusCode).To(Equal(http.StatusOK))

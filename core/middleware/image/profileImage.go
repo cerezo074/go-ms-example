@@ -61,7 +61,7 @@ func (object ProfileImageProvider) NewDownloader() fiber.Handler {
 		imageIDParam := context.Params(IMAGE_ID_KEY)
 		result, err := storageSession.Download(imageIDParam)
 		if err != nil {
-			return err
+			return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
 		}
 
 		context.Locals(PROFILE_IMAGE_DOWNLOADED_FILE, result)
