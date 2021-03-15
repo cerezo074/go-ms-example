@@ -117,7 +117,7 @@ var _ = Describe("Update User", func() {
 	Context("User updates all fields in form except email", func() {
 		When("User exists in repository", func() {
 			BeforeEach(func() {
-				requestBody, contentTypeValue, _ = utils.MultipartFormBody(shishioImageUpdated)
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(&shishioImageUpdated)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
 				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
@@ -139,7 +139,7 @@ var _ = Describe("Update User", func() {
 
 		When("User doesn't exist in repository", func() {
 			BeforeEach(func() {
-				requestBody, contentTypeValue, _ = utils.MultipartFormBody(invalidUpdatedUser)
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(&invalidUpdatedUser)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
 				server = utils.NewServer(utils.NewFailUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
@@ -163,7 +163,7 @@ var _ = Describe("Update User", func() {
 	Context("User doesn't send an image inside form", func() {
 		When("User exists in repository", func() {
 			BeforeEach(func() {
-				requestBody, contentTypeValue, _ = utils.MultipartFormBody(shishioWithoutImage)
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(&shishioWithoutImage)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
 				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{

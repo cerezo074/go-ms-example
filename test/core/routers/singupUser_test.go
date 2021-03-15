@@ -121,7 +121,7 @@ var _ = Describe("Sign up User", func() {
 	Context("User filled in register form", func() {
 		When("User doesn't exist in repository", func() {
 			BeforeEach(func() {
-				requestBody, contentTypeValue, _ = utils.MultipartFormBody(elPibe)
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(&elPibe)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
 				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
@@ -143,7 +143,7 @@ var _ = Describe("Sign up User", func() {
 
 		When("User exists in repository", func() {
 			BeforeEach(func() {
-				requestBody, contentTypeValue, _ = utils.MultipartFormBody(repitedUser)
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(&repitedUser)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
 				server = utils.NewServer(utils.NewFailUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
@@ -167,7 +167,7 @@ var _ = Describe("Sign up User", func() {
 	Context("User doesn't send image inside form", func() {
 		When("User doesn't exist in repository", func() {
 			BeforeEach(func() {
-				requestBody, contentTypeValue, _ = utils.MultipartFormBody(elPibeWithoutImage)
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(&elPibeWithoutImage)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
 				server = utils.NewServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
