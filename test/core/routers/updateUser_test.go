@@ -26,7 +26,7 @@ var (
 		ID:          uuid.New(),
 		Email:       "makoto@shishio.com",
 		Nickname:    "Mummy",
-		Password:    "123456",
+		Password:    "555555",
 		ImageID:     "profile20.png",
 		CountryCode: "JPN",
 		Birthday:    "07/01/1900",
@@ -35,17 +35,15 @@ var (
 		ID:          uuid.New(),
 		Email:       "user3@gmail.com",
 		Nickname:    "Maldini",
-		Password:    "654321",
+		Password:    "444444",
 		ImageID:     "profile3.png",
 		CountryCode: "ITA",
 		Birthday:    "08/01/2020",
 	}
-	users2              = []User{makotoShishio, user3}
-	shishioImagePath    = "../../utils/assets/shishio.jpg"
 	shishioImageUpdated = utils.UserForm{
 		Email:       "makoto@shishio.com",
 		Nickname:    "Mummy",
-		Password:    "111111",
+		Password:    "333333",
 		ImagePath:   &shishioImagePath,
 		CountryCode: "UK",
 		Birthday:    "12/22/2020",
@@ -54,48 +52,52 @@ var (
 		Email:       "makoto@shishio.com",
 		Nickname:    "Mummy",
 		Password:    "111111",
-		ImagePath:   &shishioImagePath,
+		ImagePath:   nil,
 		CountryCode: "UK",
 		Birthday:    "12/22/2020",
 	}
 	invalidUpdatedUser = utils.UserForm{
 		Email:       "newUser@test.com",
 		Nickname:    "A New User",
-		Password:    "123456",
+		Password:    "222222",
 		ImagePath:   &shishioImagePath,
 		CountryCode: "COL",
 		Birthday:    "12/22/2020",
 	}
-	shishioUpdatedUserRepo = FakeRepo{
-		UserByEmail: func(email string) (entities.User, error) {
-			for _, user := range users2 {
-				if user.Email == email {
-					return user, nil
-				}
+	updatedUsers          = []User{makotoShishio, user3}
+	shishioImagePath      = "../../utils/assets/shishio.jpg"
+	searchAllUsersByEmail = func(email string) (entities.User, error) {
+		for _, user := range updatedUsers {
+			if user.Email == email {
+				return user, nil
 			}
+		}
 
-			return entities.User{}, errors.New("Invalid user to be searched by email")
-		},
-		Update: func(updatedUser *entities.User) error {
-			if updatedUser == nil {
-				return errors.New("Invalid new user to be saved, nil reference")
-			}
-
-			if updatedUser.Email != makotoShishio.Email || updatedUser.Password == elPibe.Password {
-				return errors.New(fmt.Sprintf("Invalid old user to be updated, %v", updatedUser))
-			}
-
-			return nil
-		},
+		return entities.User{}, errors.New("Invalid user to be searched by email")
 	}
-	shishioUpdatedImageStorage = FakeImageLoader{
+	updateShisioUserOnRepo = func(updatedUser *entities.User) error {
+		if updatedUser == nil {
+			return errors.New("Invalid new user to be saved, nil reference")
+		}
+
+		if updatedUser.Email != makotoShishio.Email || updatedUser.Password == makotoShishio.Password {
+			return errors.New(fmt.Sprintf("Invalid old user to be updated, %v", updatedUser))
+		}
+
+		return nil
+	}
+	updateShishioRepo = FakeRepo{
+		UserByEmail: searchAllUsersByEmail,
+		Update:      updateShisioUserOnRepo,
+	}
+	updateShishioImageOnStorage = FakeImageLoader{
 		UploadImage: func(image io.Reader, filename string) (string, error) {
 			areFilesEquals, err := utils.FilesMatch(image, *shishioImageUpdated.ImagePath)
 			if err != nil || !areFilesEquals {
 				return "", errors.New(fmt.Sprintf("Invalid file to be uploaded %s", filename))
 			}
 
-			return "new-path/for-updated-image/" + filename, nil
+			return "new-path/for-updated-image/" + "updatedImage.png", nil
 		},
 	}
 )
@@ -115,14 +117,14 @@ var _ = Describe("Update User", func() {
 	Context("User updates all fields in form except email", func() {
 		When("User exists in repository", func() {
 			BeforeEach(func() {
-				requestBody, contentTypeValue, _ = utils.MultipartFormBody(&shishioImageUpdated)
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(shishioImageUpdated)
 				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
 				server = buildServer(utils.NewSuccessUnmarshaller)
 				fakeValidator := validator.UserValidatorProvider{
-					UserStore: shishioUpdatedUserRepo,
+					UserStore: updateShishioRepo,
 				}
-				fakeImageProvider := NewImageProvider(shishioUpdatedUserRepo, fakeValidator, shishioUpdatedImageStorage)
-				appServices = NewUserMockedServices(shishioUpdatedUserRepo, fakeValidator, fakeImageProvider)
+				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageOnStorage)
+				appServices = NewUserMockedServices(updateShishioRepo, fakeValidator, fakeImageProvider)
 			})
 
 			It("Should get user crated message successfully", func() {
@@ -135,50 +137,50 @@ var _ = Describe("Update User", func() {
 			})
 		})
 
-		// 	When("User doesn't exist in repository", func() {
-		// 		BeforeEach(func() {
-		// 			requestBody, contentTypeValue, _ = utils.MultipartFormBody(&invalidUpdatedUser)
-		// 			requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-		// 			server = buildServer(utils.NewFailUnmarshaller)
-		// 			fakeValidator := validator.UserValidatorProvider{
-		// 				UserStore: shishioUpdatedUserRepo,
-		// 			}
-		// 			fakeImageProvider := NewImageProvider(shishioUpdatedUserRepo, fakeValidator, shishioUpdatedImageStorage)
-		// 			appServices = NewUserMockedServices(shishioUpdatedUserRepo, fakeValidator, fakeImageProvider)
-		// 		})
+		When("User doesn't exist in repository", func() {
+			BeforeEach(func() {
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(invalidUpdatedUser)
+				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
+				server = buildServer(utils.NewFailUnmarshaller)
+				fakeValidator := validator.UserValidatorProvider{
+					UserStore: updateShishioRepo,
+				}
+				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageOnStorage)
+				appServices = NewUserMockedServices(updateShishioRepo, fakeValidator, fakeImageProvider)
+			})
 
-		// 		It("Shouldn't get user crated message successfully", func() {
-		// 			routers.NewUserRouter().Register(server.FiberApp, appServices)
-		// 			response, object, _ := server.Execute("PUT", "/api/v1/users", requestHeaders, requestBody)
-		// 			jsonResponse, ok := object.(models.FailResponse)
-		// 			Expect(ok).To(Equal(true))
-		// 			Expect(response.StatusCode).To(Equal(http.StatusConflict))
-		// 			Expect(jsonResponse.Error).To(Equal(fmt.Sprintf("a user with the following email(%s) exist", repeatedEmail)))
-		// 		})
-		// 	})
-		// })
+			It("Should get error message when attempt to create user crated message successfully", func() {
+				routers.NewUserRouter().Register(server.FiberApp, appServices)
+				response, object, _ := server.Execute("PUT", "/api/v1/users", requestHeaders, requestBody)
+				jsonResponse, ok := object.(models.FailResponse)
+				Expect(ok).To(Equal(true))
+				Expect(response.StatusCode).To(Equal(http.StatusNotFound))
+				Expect(jsonResponse.Error).To(Equal("invalid user"))
+			})
+		})
+	})
 
-		// Context("User doesn't send image inside form", func() {
-		// 	When("User exists in repository", func() {
-		// 		BeforeEach(func() {
-		// 			requestBody, contentTypeValue, _ = utils.MultipartFormBody(&shishioWithoutImage)
-		// 			requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
-		// 			server = buildServer(utils.NewSuccessUnmarshaller)
-		// 			fakeValidator := validator.UserValidatorProvider{
-		// 				UserStore: shishioUpdatedUserRepo,
-		// 			}
-		// 			fakeImageProvider := NewImageProvider(shishioUpdatedUserRepo, fakeValidator, shishioUpdatedImageStorage)
-		// 			appServices = NewUserMockedServices(shishioUpdatedUserRepo, fakeValidator, fakeImageProvider)
-		// 		})
+	Context("User doesn't send an image inside form", func() {
+		When("User exists in repository", func() {
+			BeforeEach(func() {
+				requestBody, contentTypeValue, _ = utils.MultipartFormBody(shishioWithoutImage)
+				requestHeaders = http.Header{"Content-Type": []string{contentTypeValue}}
+				server = buildServer(utils.NewSuccessUnmarshaller)
+				fakeValidator := validator.UserValidatorProvider{
+					UserStore: updateShishioRepo,
+				}
+				fakeImageProvider := NewImageProvider(updateShishioRepo, fakeValidator, updateShishioImageOnStorage)
+				appServices = NewUserMockedServices(updateShishioRepo, fakeValidator, fakeImageProvider)
+			})
 
-		// 		It("Should get user crated message successfully", func() {
-		// 			routers.NewUserRouter().Register(server.FiberApp, appServices)
-		// 			response, object, _ := server.Execute("PUT", "/api/v1/users", requestHeaders, requestBody)
-		// 			jsonResponse, ok := object.(models.SuccessResponse)
-		// 			Expect(ok).To(Equal(true))
-		// 			Expect(response.StatusCode).To(Equal(http.StatusOK))
-		// 			Expect(jsonResponse.Data).To(Equal("user updated successfully"))
-		// 		})
-		// 	})
+			It("Should get user updated message successfully", func() {
+				routers.NewUserRouter().Register(server.FiberApp, appServices)
+				response, object, _ := server.Execute("PUT", "/api/v1/users", requestHeaders, requestBody)
+				jsonResponse, ok := object.(models.SuccessResponse)
+				Expect(ok).To(Equal(true))
+				Expect(response.StatusCode).To(Equal(http.StatusOK))
+				Expect(jsonResponse.Data).To(Equal("user updated successfully"))
+			})
+		})
 	})
 })

@@ -94,16 +94,9 @@ func (object userHandler) getImage(context *fiber.Ctx) error {
 }
 
 func (object userHandler) newUser(context *fiber.Ctx) error {
-	user := new(entities.User)
-
-	if err := context.BodyParser(user); err != nil {
-		return response.MakeErrorJSON(http.StatusNotFound, err.Error())
-	}
-
-	if imageURI, ok := context.Locals(image.PROFILE_IMAGE__UPLOADED_ID).(string); ok {
-		user.ImageID = imagePath + imageURI
-	} else {
-		user.ImageID = imagePath + image.DEFAULT_IMAGE
+	user, err := getUserRequestBody(object, context)
+	if err != nil {
+		return err
 	}
 
 	if err := object.userRepository().CreateUser(user); err != nil {
@@ -114,22 +107,12 @@ func (object userHandler) newUser(context *fiber.Ctx) error {
 }
 
 func (object userHandler) updateUser(context *fiber.Ctx) error {
-	updatedUser := new(entities.User)
-	if err := context.BodyParser(updatedUser); err != nil {
-		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
+	user, err := getUserRequestBody(object, context)
+	if err != nil {
+		return err
 	}
 
-	if imageID, ok := context.Locals(image.PROFILE_IMAGE__UPLOADED_ID).(string); ok {
-		updatedUser.ImageID = imagePath + imageID
-	} else {
-		updatedUser.ImageID = imagePath + image.DEFAULT_IMAGE
-	}
-
-	if err := object.userValidator().IsValid(*updatedUser); err != nil {
-		return response.MakeErrorJSON(http.StatusBadRequest, err.Error())
-	}
-
-	if err := object.userRepository().UpdateUser(updatedUser); err != nil {
+	if err := object.userRepository().UpdateUser(user); err != nil {
 		return response.MakeErrorJSON(http.StatusInternalServerError, err.Error())
 	}
 
@@ -148,4 +131,24 @@ func (object userHandler) deleteUser(context *fiber.Ctx) error {
 	}
 
 	return response.MakeSuccessJSON("user deleted successfully", context)
+}
+
+func getUserRequestBody(object userHandler, context *fiber.Ctx) (*entities.User, error) {
+	user := new(entities.User)
+
+	if err := context.BodyParser(user); err != nil {
+		return nil, response.MakeErrorJSON(http.StatusBadRequest, err.Error())
+	}
+
+	if imageURI, ok := context.Locals(image.PROFILE_IMAGE__UPLOADED_ID).(string); ok {
+		user.ImageID = imagePath + imageURI
+	} else {
+		user.ImageID = imagePath + image.DEFAULT_IMAGE
+	}
+
+	if err := object.userValidator().IsValid(*user); err != nil {
+		return nil, response.MakeErrorJSON(http.StatusBadRequest, err.Error())
+	}
+
+	return user, nil
 }

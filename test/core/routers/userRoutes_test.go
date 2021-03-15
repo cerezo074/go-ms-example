@@ -202,7 +202,7 @@ func Test_ShouldntDeleteUserByEmail_WhenItDoesntExistInRepository(t *testing.T) 
 	app.Get("/api/v1/users/email", object.getUser) // DONE
 	app.Get(imagePath+":id", object.userImage().NewDownloader(), object.getImage)
 	app.Post("/api/v1/users", object.userValidator().DuplicatedUser(), object.userImage().NewUploader(), object.newUser) // DONE
-	app.Put("/api/v1/users", object.userImage().UpdateImage(), object.updateUser)
+	app.Put("/api/v1/users", object.userImage().UpdateImage(), object.updateUser) //DONE
 	app.Delete("/api/v1/users/email", object.userImage().DeleteImage(), object.deleteUser) //DONE
 
 	https://stackoverflow.com/questions/43904974/testing-go-http-request-formfile
