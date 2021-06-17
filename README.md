@@ -1,4 +1,4 @@
-# To Run
+# Project's Setup
 
 1. Install [Docker](https://www.docker.com) from their website.
 
